@@ -2,6 +2,7 @@ import { build } from "esbuild";
 
 const harness = process.argv.includes("--harness");
 const smoke = process.argv.includes("--smoke");
+const market = process.argv.includes("--market");
 
 const common = {
   bundle: true,
@@ -28,10 +29,22 @@ if (harness) {
     alias: { obsidian: "./dev/stub-obsidian.js" },
   });
 } else {
+  // --market：市场版，剥离依赖本地 Python 的数位板助手（审核不接受拉起外部进程）
+  const marketStub = {
+    name: "market-stub",
+    setup(b) {
+      b.onResolve({ filter: /focus\.js$/ }, (args) => (args.path.includes("focus") ? { path: "focus-stub", namespace: "stub" } : null));
+      b.onLoad({ filter: /.*/, namespace: "stub" }, () => ({
+        contents: "export class FocusHelper { constructor(){} async start(){} async stop(){} helperProc = null; }",
+        loader: "js",
+      }));
+    },
+  };
   await build({
     ...common,
     entryPoints: ["src/main.js"],
-    outfile: "main.js",
+    outfile: market ? "dist-market/main.js" : "main.js",
+    plugins: market ? [marketStub] : [],
     format: "cjs",
     platform: "node",
     external: ["obsidian", "child_process", "fs", "path"],
