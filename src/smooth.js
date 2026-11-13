@@ -124,16 +124,16 @@ export class SmoothZoom {
       return false;
     }
 
-    // 安全阀：如果这一帧是空白的（Excalidraw 正处在清屏/重绘的瞬间），就别冻结，
-    // 否则用户会看到一片空白。宁可这一下不优化，也不能把画面弄没。
+    // 安全阀：把快照缩到 4×4 再采样，避免在大画布上 getImageData（GPU 回读很贵）
     try {
-      const g = snap.getContext("2d");
-      const pts = [[8, 8], [snap.width - 8, 8], [8, snap.height - 8], [Math.floor(snap.width / 2), Math.floor(snap.height / 2)]];
+      const probe = document.createElement("canvas");
+      probe.width = 4;
+      probe.height = 4;
+      const pg = probe.getContext("2d");
+      pg.drawImage(snap, 0, 0, 4, 4);
+      const data = pg.getImageData(0, 0, 4, 4).data;
       let nonEmpty = 0;
-      for (const [x, y] of pts) {
-        const d = g.getImageData(Math.max(0, x), Math.max(0, y), 1, 1).data;
-        if (d[3] > 8) nonEmpty += 1;
-      }
+      for (let i = 3; i < data.length; i += 4) if (data[i] > 8) nonEmpty += 1;
       if (nonEmpty === 0) return false;
     } catch (err) {
       return false;
@@ -452,7 +452,7 @@ export class SmoothZoom {
       c.height = base.height;
     }
     try {
-      c.getContext("2d").drawImage(base, 0, 0);
+      c.getContext("2d").drawImage(base, 0, 0, c.width, c.height);
     } catch (err) {
       return;
     }
