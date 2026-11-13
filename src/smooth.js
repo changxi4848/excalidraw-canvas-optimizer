@@ -115,7 +115,10 @@ export class SmoothZoom {
     if (reuse) snap = reuse.snap;
     try {
       if (!snap) {
-      const q = ((st.zoom && st.zoom.value) || 1) < 0.35 ? 0.5 : 1;
+      let q = ((st.zoom && st.zoom.value) || 1) < 0.35 ? 0.5 : 1;
+      const capMax = 1600;
+      const longest = Math.max(base.width, base.height) * q;
+      if (longest > capMax) q = q * (capMax / longest);
       snap = document.createElement("canvas");
       snap.width = Math.max(1, Math.round(base.width * q));
       snap.height = Math.max(1, Math.round(base.height * q));
@@ -191,7 +194,7 @@ export class SmoothZoom {
     ].join(";");
 
     const snap = s.snap;
-    snap.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;";
+    snap.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;will-change:transform;backface-visibility:hidden;";
     snap.style.transformOrigin = "0 0";
 
     clip.appendChild(snap);
@@ -317,7 +320,7 @@ export class SmoothZoom {
     const k = s.zoom / s.zoom0;
     const e = (s.scrollX - s.scrollX0) * s.zoom;
     const f = (s.scrollY - s.scrollY0) * s.zoom;
-    s.overlay.style.transform = `matrix(${k},0,0,${k},${e},${f})`;
+    s.overlay.style.transform = `matrix3d(${k},0,0,0,0,${k},0,0,0,0,1,0,${e},${f},0,1)`;
     this.positionUnderlay();
   }
 
@@ -448,7 +451,10 @@ export class SmoothZoom {
     const st = api.getAppState();
     let c = this._snapCanvas;
     if (!c) { c = document.createElement("canvas"); this._snapCanvas = c; }
-    const qq = ((st.zoom && st.zoom.value) || 1) < 0.35 ? 0.5 : 1;
+    let qq = ((st.zoom && st.zoom.value) || 1) < 0.35 ? 0.5 : 1;
+    const capMax2 = 1600;
+    const longest2 = Math.max(base.width, base.height) * qq;
+    if (longest2 > capMax2) qq = qq * (capMax2 / longest2);
     const ww = Math.max(1, Math.round(base.width * qq));
     const hh = Math.max(1, Math.round(base.height * qq));
     if (c.width !== ww || c.height !== hh) {
