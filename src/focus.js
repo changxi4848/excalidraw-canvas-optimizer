@@ -187,9 +187,7 @@ export class FocusHelper {
       const view = leaf && leaf.view;
       const el = view && view.containerEl;
       if (!el) return;
-      // 用场景画布而非容器：容器含顶部工具栏，回中会偏上
-      const cv = el.querySelector("canvas.excalidraw__canvas");
-      const r = (cv && cv.clientWidth > 50 ? cv : el).getBoundingClientRect();
+      const r = el.getBoundingClientRect();
       if (!r || r.width < 50 || r.height < 50) return;
 
       const fx = (r.left + r.width / 2) / window.innerWidth;
