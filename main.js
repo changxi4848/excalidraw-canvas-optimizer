@@ -1966,23 +1966,35 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
     new import_obsidian.Setting(containerEl).setName("\u68C0\u6D4B\u66F4\u65B0").setDesc("\u4ECE GitHub \u68C0\u67E5\u662F\u5426\u6709\u65B0\u7248\u672C\uFF08\u5F53\u524D v" + this.plugin.manifest.version + "\uFF09").addButton(
       (b) => b.setButtonText("\u68C0\u6D4B").onClick(async () => {
         const cur = this.plugin.manifest.version;
+        const repo = "https://github.com/changxi4848/excalidraw-canvas-optimizer";
         try {
-          const res = await (0, import_obsidian.requestUrl)({
+          const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 1e4));
+          const req = (0, import_obsidian.requestUrl)({
             url: "https://api.github.com/repos/changxi4848/excalidraw-canvas-optimizer/releases/latest",
             headers: { "User-Agent": "obsidian-excali-canvas-optimizer" },
             throw: false
           });
+          const res = await Promise.race([req, timeout]);
+          if (!res || res.status >= 400) {
+            new import_obsidian.Notice("\u68C0\u6D4B\u5931\u8D25\uFF1AGitHub \u8FD4\u56DE " + (res ? res.status : "\u65E0\u54CD\u5E94") + "\u3002\u53EF\u80FD\u662F\u7F51\u7EDC\u65E0\u6CD5\u8BBF\u95EE GitHub\u3002\n\u53D1\u5E03\u9875\uFF1A" + repo + "/releases", 15e3);
+            return;
+          }
           const data = res.json || {};
           const tag = String(data.tag_name || "");
           const latest = tag.replace(/^v/i, "");
           if (!latest) {
-            new import_obsidian.Notice("GitHub \u4E0A\u6CA1\u6709\u627E\u5230\u53D1\u5E03\u7248\u672C");
+            new import_obsidian.Notice("GitHub \u4E0A\u8FD8\u6CA1\u6709\u53D1\u5E03\u7248\u672C\n" + repo + "/releases", 1e4);
             return;
           }
           if (latest === cur) new import_obsidian.Notice("\u5DF2\u662F\u6700\u65B0\u7248\u672C v" + cur);
-          else new import_obsidian.Notice("\u53D1\u73B0\u65B0\u7248\u672C " + tag + "\uFF08\u5F53\u524D v" + cur + "\uFF09\n" + (data.html_url || ""), 12e3);
+          else new import_obsidian.Notice("\u53D1\u73B0\u65B0\u7248\u672C " + tag + "\uFF08\u5F53\u524D v" + cur + "\uFF09\n" + (data.html_url || repo + "/releases"), 15e3);
         } catch (err) {
-          new import_obsidian.Notice("\u68C0\u6D4B\u5931\u8D25\uFF1A" + (err && err.message ? err.message : err));
+          const msg = String(err && err.message ? err.message : err);
+          if (msg === "timeout") {
+            new import_obsidian.Notice("\u68C0\u6D4B\u8D85\u65F6\uFF1A10 \u79D2\u6CA1\u8FDE\u4E0A GitHub\u3002\u9700\u8981\u4EE3\u7406\u624D\u80FD\u8BBF\u95EE\u3002\n\u53D1\u5E03\u9875\uFF1A" + repo + "/releases", 15e3);
+          } else {
+            new import_obsidian.Notice("\u68C0\u6D4B\u5931\u8D25\uFF1A" + msg + "\n\u53EF\u80FD\u662F\u7F51\u7EDC\u65E0\u6CD5\u8BBF\u95EE GitHub\u3002\u53D1\u5E03\u9875\uFF1A" + repo + "/releases", 15e3);
+          }
         }
       })
     );

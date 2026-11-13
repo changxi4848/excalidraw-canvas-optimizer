@@ -248,20 +248,32 @@ export class MinimapSettingTab extends PluginSettingTab {
       .addButton((b) =>
         b.setButtonText("检测").onClick(async () => {
           const cur = this.plugin.manifest.version;
+          const repo = "https://github.com/changxi4848/excalidraw-canvas-optimizer";
           try {
-            const res = await requestUrl({
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 10000));
+            const req = requestUrl({
               url: "https://api.github.com/repos/changxi4848/excalidraw-canvas-optimizer/releases/latest",
               headers: { "User-Agent": "obsidian-excali-canvas-optimizer" },
               throw: false,
             });
+            const res = await Promise.race([req, timeout]);
+            if (!res || res.status >= 400) {
+              new Notice("检测失败：GitHub 返回 " + (res ? res.status : "无响应") + "。可能是网络无法访问 GitHub。\n发布页：" + repo + "/releases", 15000);
+              return;
+            }
             const data = res.json || {};
             const tag = String(data.tag_name || "");
             const latest = tag.replace(/^v/i, "");
-            if (!latest) { new Notice("GitHub 上没有找到发布版本"); return; }
+            if (!latest) { new Notice("GitHub 上还没有发布版本\n" + repo + "/releases", 10000); return; }
             if (latest === cur) new Notice("已是最新版本 v" + cur);
-            else new Notice("发现新版本 " + tag + "（当前 v" + cur + "）\n" + (data.html_url || ""), 12000);
+            else new Notice("发现新版本 " + tag + "（当前 v" + cur + "）\n" + (data.html_url || repo + "/releases"), 15000);
           } catch (err) {
-            new Notice("检测失败：" + (err && err.message ? err.message : err));
+            const msg = String(err && err.message ? err.message : err);
+            if (msg === "timeout") {
+              new Notice("检测超时：10 秒没连上 GitHub。需要代理才能访问。\n发布页：" + repo + "/releases", 15000);
+            } else {
+              new Notice("检测失败：" + msg + "\n可能是网络无法访问 GitHub。发布页：" + repo + "/releases", 15000);
+            }
           }
         })
       );
