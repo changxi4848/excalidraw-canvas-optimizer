@@ -115,10 +115,11 @@ export class SmoothZoom {
     if (reuse) snap = reuse.snap;
     try {
       if (!snap) {
+      const q = ((st.zoom && st.zoom.value) || 1) < 0.35 ? 0.5 : 1;
       snap = document.createElement("canvas");
-      snap.width = base.width;
-      snap.height = base.height;
-      snap.getContext("2d").drawImage(base, 0, 0);
+      snap.width = Math.max(1, Math.round(base.width * q));
+      snap.height = Math.max(1, Math.round(base.height * q));
+      snap.getContext("2d").drawImage(base, 0, 0, snap.width, snap.height);
       }
     } catch (err) {
       return false;
@@ -447,9 +448,12 @@ export class SmoothZoom {
     const st = api.getAppState();
     let c = this._snapCanvas;
     if (!c) { c = document.createElement("canvas"); this._snapCanvas = c; }
-    if (c.width !== base.width || c.height !== base.height) {
-      c.width = base.width;
-      c.height = base.height;
+    const qq = ((st.zoom && st.zoom.value) || 1) < 0.35 ? 0.5 : 1;
+    const ww = Math.max(1, Math.round(base.width * qq));
+    const hh = Math.max(1, Math.round(base.height * qq));
+    if (c.width !== ww || c.height !== hh) {
+      c.width = ww;
+      c.height = hh;
     }
     try {
       c.getContext("2d").drawImage(base, 0, 0, c.width, c.height);
