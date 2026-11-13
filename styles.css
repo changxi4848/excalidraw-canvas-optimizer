@@ -1,0 +1,248 @@
+/* Excalidraw 小地图 —— 悬浮面板样式
+ *
+ * 结构：canvas 只是"地图位图"，蓝框和压暗是 DOM。
+ * 因此主画布平移时只改 .emm-box 的 transform，canvas 一个像素都不重绘。
+ */
+
+.view-content.emm-host {
+  position: relative;
+}
+
+.emm-panel {
+  --emm-gray: #8a8f98;
+  --emm-gray-strong: #6f747d;
+  position: absolute;
+  z-index: 30;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--background-primary, #fff);
+  /* 常态不描边，只留一层柔和投影，避免抢画面 */
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: box-shadow 120ms ease;
+}
+
+.emm-panel:hover {
+  box-shadow:
+    0 0 0 3px var(--emm-gray-strong),
+    0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.emm-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.emm-panel:active .emm-canvas {
+  cursor: grabbing;
+}
+
+/* 压暗层：4 块实心 div，跟着蓝框的边界走 */
+.emm-dim {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.emm-dim > div {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  background: var(--emm-dim, rgba(0, 0, 0, 0.12));
+}
+
+/* 蓝色视口框：用 transform 定位 */
+.emm-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(47, 111, 214, 0.95);
+  border-radius: 1px;
+  transform-origin: 0 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* 顶部拖动条：三颗小点，常态可见，hover 时跟着边框一起变主题色 */
+.emm-bar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.emm-panel:hover .emm-bar,
+.emm-panel.is-dragging .emm-bar {
+  opacity: 1;
+}
+
+.emm-bar-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.emm-bar-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-muted, #8a8f98);
+  transition: background 120ms ease;
+}
+
+.emm-panel:hover .emm-bar-dots i,
+.emm-panel.is-dragging .emm-bar-dots i {
+  background: var(--emm-gray-strong);
+}
+/* 回正按钮：和拖动条同一套显示规则 */
+.emm-reset {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  width: 24px;
+  height: 24px;
+  line-height: 23px;
+  text-align: center;
+  font-size: 15px;
+  border-radius: 5px;
+  color: var(--text-muted, #8a8f98);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease, background 120ms ease;
+}
+
+/* 右上角被缩放把手占用时，回正按钮让开一点 */
+[data-handle="tr"] .emm-reset {
+  right: 26px;
+}
+
+.emm-panel:hover .emm-reset {
+  opacity: 1;
+}
+
+.emm-reset:hover {
+  color: var(--emm-gray-strong);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* 缩放把手：永远在朝向画面中心的那一角（脚本按象限切 data-handle） */
+.emm-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+  color: var(--text-faint, #aaa);
+  background-repeat: no-repeat;
+  transition: opacity 120ms ease;
+}
+
+.emm-panel:hover .emm-handle,
+.emm-panel.is-dragging .emm-handle {
+  opacity: 0.95;
+}
+
+[data-handle="tl"] .emm-handle {
+  left: 0;
+  top: 0;
+  cursor: nwse-resize;
+  background-image:
+    linear-gradient(135deg, transparent 40%, currentColor 40% 48%, transparent 48%),
+    linear-gradient(135deg, transparent 62%, currentColor 62% 70%, transparent 70%);
+}
+
+[data-handle="br"] .emm-handle {
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+  background-image:
+    linear-gradient(135deg, transparent 40%, currentColor 40% 48%, transparent 48%),
+    linear-gradient(135deg, transparent 62%, currentColor 62% 70%, transparent 70%);
+}
+
+[data-handle="tr"] .emm-handle {
+  right: 0;
+  top: 0;
+  cursor: nesw-resize;
+  background-image:
+    linear-gradient(45deg, transparent 40%, currentColor 40% 48%, transparent 48%),
+    linear-gradient(45deg, transparent 62%, currentColor 62% 70%, transparent 70%);
+}
+
+[data-handle="bl"] .emm-handle {
+  left: 0;
+  bottom: 0;
+  cursor: nesw-resize;
+  background-image:
+    linear-gradient(45deg, transparent 40%, currentColor 40% 48%, transparent 48%),
+    linear-gradient(45deg, transparent 62%, currentColor 62% 70%, transparent 70%);
+}
+
+/* 左下角比例读数：和画布左下角的缩放百分比同一口径 */
+.emm-badge {
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  padding: 0 3px;
+  font-size: 10px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, #777);
+  background: color-mix(in srgb, var(--background-primary, #fff) 72%, transparent);
+  border-radius: 3px;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.emm-badge.is-hidden {
+  display: none;
+}
+
+.emm-panel.is-dragging,
+.emm-panel.is-dragging .emm-canvas {
+  cursor: move;
+}
+
+/* 底部横向缩放条：hover 面板才出现；往右放大、往左缩小且越往左越不灵敏 */
+.emm-zoombar {
+  position: absolute;
+  left: 18px;
+  right: 22px;
+  bottom: 3px;
+  height: 10px;
+  cursor: ew-resize;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  border-radius: 5px;
+  background: rgba(127, 137, 150, 0.25);
+}
+
+.emm-panel:hover .emm-zoombar,
+.emm-zoombar:active {
+  opacity: 1;
+}
+
+.emm-zoombar-knob {
+  position: absolute;
+  top: 1px;
+  width: 10px;
+  height: 8px;
+  margin-left: -5px;
+  border-radius: 4px;
+  background: var(--text-muted, #8a8f98);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
