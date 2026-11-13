@@ -11,6 +11,19 @@ Excalidraw 很好用，但当一页笔记画到几千笔之后，会同时出现
 
 ---
 
+## English (short)
+
+**Excali Canvas Optimizer** — a community plugin for [Obsidian](https://obsidian.md) + [Excalidraw](https://github.com/zsviczian/obsidian-excalidraw-plugin).
+
+- **Navigator minimap** — a thumbnail anchored to the canvas that only draws blocks and polylines (never re-renders strokes), so a 5,000-stroke page stays readable and cheap. Click to jump, drag the blue box to pan, wheel/bar to zoom the map, double-click to fit.
+- **Smooth zoom / pan** — while zooming, Excalidraw re-renders the whole scene every frame. This plugin freezes the current frame, moves a single bitmap during the gesture, and commits once when you stop. The smaller you zoom out, the longer the settle window.
+- **Tablet (pen) mode** — no Ctrl needed for wheel zoom, cursor recentring on tab switch, keyboard focus hand-off.
+
+Windows desktop only. Does not modify your documents or undo stack. MIT licensed.
+
+
+---
+
 ## 三个功能
 
 ### 1. 导航小地图
