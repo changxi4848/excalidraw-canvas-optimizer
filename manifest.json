@@ -3,7 +3,7 @@
   "name": "Excali 画布优化",
   "version": "1.0.1",
   "minAppVersion": "1.4.0",
-  "description": "导航小地图 + 顺滑缩放：看清整张图、缩放拖动不卡。个人开发，随缘维护。",
+  "description": "Excalidraw 配套优化：导航小地图 + 顺滑缩放拖动，几千笔画也不卡。",
   "author": "卢长希",
   "authorUrl": "https://github.com/changxi4848",
   "isDesktopOnly": true
