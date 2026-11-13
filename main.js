@@ -2157,10 +2157,8 @@ var SmoothZoom = class {
     host.appendChild(clip);
     s.clip = clip;
     s.overlay = snap;
-    if (s.mode === "pan") {
-      clip.style.pointerEvents = "auto";
-      clip.style.cursor = "grab";
-    }
+    clip.style.pointerEvents = "auto";
+    clip.style.cursor = s.mode === "zoom" ? "not-allowed" : "grab";
     requestAnimationFrame(() => {
       if (!s.clip) return;
       const h = s.base.parentElement || document.body;
@@ -2471,13 +2469,6 @@ var SmoothZoom = class {
       if (this.session.mode === "pan") return;
       ev.preventDefault();
       ev.stopPropagation();
-      const s0 = this.session;
-      s0.mode = "pan";
-      s0.startClientX = ev.clientX;
-      s0.startClientY = ev.clientY;
-      s0.scrollX0 = s0.scrollX;
-      s0.scrollY0 = s0.scrollY;
-      this.dragging = { id: ev.pointerId };
       return;
     }
     const view = this.view();
