@@ -1,4 +1,6 @@
-# Excali 画布优化
+# Excali Canvas Optimizer
+
+**Excali 画布优化** — Obsidian + Excalidraw 的配套优化插件
 
 > **Excalidraw 的配套优化插件**：给它加一张随时能看清全局的导航小地图，再给它一套不卡手的缩放/拖动。需要先安装 [obsidian-excalidraw-plugin](https://github.com/zsviczian/obsidian-excalidraw-plugin)。
 

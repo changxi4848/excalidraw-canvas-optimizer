@@ -1848,7 +1848,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
     const s = this.plugin.settings;
     containerEl.replaceChildren();
     const title = document.createElement("h2");
-    title.textContent = "Excali \u753B\u5E03\u4F18\u5316";
+    title.textContent = "Excali Canvas Optimizer\uFF08\u753B\u5E03\u4F18\u5316\uFF09";
     containerEl.appendChild(title);
     const intro = document.createElement("p");
     intro.className = "setting-item-description";
@@ -1999,7 +1999,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
       })
     );
     const aboutLines = [
-      "Excali \u753B\u5E03\u4F18\u5316  v1.0.1",
+      "Excali Canvas Optimizer\uFF08Excali \u753B\u5E03\u4F18\u5316\uFF09  v1.0.1",
       "\u4F5C\u8005\uFF1A\u5362\u957F\u5E0C  https://github.com/changxi4848",
       "\u8BE5\u63D2\u4EF6\u662F Excalidraw \u7684\u7B2C\u4E09\u65B9\u8F85\u52A9\u4F18\u5316\u63D2\u4EF6\uFF0C\u4E2A\u4EBA\u5F00\u53D1\u3001\u968F\u7F18\u7EF4\u62A4\uFF0C\u4EC5\u652F\u6301 Windows \u7AEF\u3002",
       "",

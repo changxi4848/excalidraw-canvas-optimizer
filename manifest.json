@@ -1,6 +1,6 @@
 {
   "id": "excalidraw-canvas-optimizer",
-  "name": "Excali 画布优化",
+  "name": "Excali Canvas Optimizer",
   "version": "1.0.1",
   "minAppVersion": "1.4.0",
   "description": "Excalidraw 配套优化：导航小地图 + 顺滑缩放拖动，几千笔画也不卡。个人开发维护，仅供学习使用参考。",
