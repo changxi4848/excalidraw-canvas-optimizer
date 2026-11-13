@@ -162,8 +162,9 @@ export class SmoothZoom {
       elementCount: (st.__els || api.getSceneElements() || []).length,
       scrollX: baseScrollX,
       scrollY: baseScrollY,
-      ax: ev ? ev.clientX - rect.left : rect.width / 2,
-      ay: ev ? ev.clientY - rect.top : rect.height / 2,
+      // 笔模式的滚轮事件来自笔尖，和回中后的鼠标光标不是一回事，统一锚在画布中心
+      ax: (ev && this.settings.inputMode !== "pen") ? ev.clientX - rect.left : rect.width / 2,
+      ay: (ev && this.settings.inputMode !== "pen") ? ev.clientY - rect.top : rect.height / 2,
       startClientX: ev ? ev.clientX : 0,
       startClientY: ev ? ev.clientY : 0,
     };
