@@ -39,13 +39,22 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
     this._saveTimer = null;
     this._syncTimer = null;
 
+    // ---- 稳定性：模块隔离 / 失败计数 ----
+    this._failures = new Map();
+    this._moduleErrors = {};
+
     this.smooth = new SmoothZoom(this);
     this.focus = new FocusHelper(this);
     if (this.settings.inputMode === "pen") {
-      try { await this.focus.start(); } catch (err) { console.warn("[optimizer] focus helper failed", err); }
+      try { await this.focus.start(); } catch (err) { this._moduleErrors.focus = String(err && (err.message || err)); console.warn("[optimizer] 笔模式助手启用失败", err); }
     }
     this.smooth.enabled = this.settings.smoothEnabled !== false;
-    this.smooth.start();
+    try {
+      this.smooth.start();
+    } catch (err) {
+      this._moduleErrors.smooth = String(err && (err.message || err));
+      console.error("[optimizer] 顺滑缩放启用失败", err);
+    }
 
     this.addRibbonIcon("map", "切换 Excalidraw 小地图", () => this.toggleActive());
 
@@ -80,6 +89,10 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
 
     this.app.workspace.onLayoutReady(() => this.scheduleSync());
     this.scheduleTick();
+  }
+
+  moduleHealth() {
+    return { errors: this._moduleErrors || {}, failures: Array.from((this._failures || new Map()).entries()) };
   }
 
   onunload() {
@@ -148,7 +161,7 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
       panel.applyLayout();
       panel.invalidate();
     }
-    this.tickAll();
+    this.safe("tick", () => this.tickAll());
   }
 
   /* --------------------------------------------------------- 面板生命周期 */
@@ -157,7 +170,7 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
     if (this._syncTimer) window.clearTimeout(this._syncTimer);
     this._syncTimer = window.setTimeout(() => {
       this._syncTimer = null;
-      this.sync();
+      this.safe("navigator", () => this.sync());
     }, 120);
   }
 
@@ -192,8 +205,28 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
         this._pendingTimer = null;
         return;
       }
-      this.sync();
+      this.safe("navigator", () => this.sync());
     }, 150);
+  }
+
+  /** 稳定性包装：同一处连续失败 5 次就停用该功能并提示，避免无声劣化 */
+  safe(name, fn, fallback) {
+    try {
+      const out = fn();
+      this._failures.delete(name);
+      return out;
+    } catch (err) {
+      const n = (this._failures.get(name) || 0) + 1;
+      this._failures.set(name, n);
+      if (n === 1 || n === 5) console.warn("[optimizer] " + name + " 失败 " + n + " 次", err);
+      if (n === 5) {
+        this._moduleErrors[name] = String(err && (err.message || err));
+        if (name === "smooth" && this.smooth) this.smooth.enabled = false;
+        if (name === "navigator") this.settings.navigatorEnabled = false;
+        new Notice("Excali 画布优化：" + name + " 连续出错，已自动停用");
+      }
+      return fallback;
+    }
   }
 
   sync() {
@@ -272,7 +305,7 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
       if (!live.has(key)) this.leafState.delete(key);
     }
 
-    this.tickAll();
+    this.safe("tick", () => this.tickAll());
   }
 
   toggleActive() {
@@ -283,7 +316,7 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
     }
     const showing = this.shouldShow(leaf);
     this.leafState.set(leaf, showing ? "hide" : "show");
-    this.sync();
+    this.safe("navigator", () => this.sync());
   }
 
   /* --------------------------------------------------------- 轮询 */
@@ -303,7 +336,7 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
     const delay = fast ? Math.min(60, base) : base;
     this._tickTimer = window.setTimeout(() => {
       this._tickTimer = null;
-      this.tickAll();
+      this.safe("tick", () => this.tickAll());
       this.scheduleTick();
     }, delay);
   }

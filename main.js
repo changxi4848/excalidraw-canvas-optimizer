@@ -3033,17 +3033,25 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian3.Plugin {
     this._raf = null;
     this._saveTimer = null;
     this._syncTimer = null;
+    this._failures = /* @__PURE__ */ new Map();
+    this._moduleErrors = {};
     this.smooth = new SmoothZoom(this);
     this.focus = new FocusHelper(this);
     if (this.settings.inputMode === "pen") {
       try {
         await this.focus.start();
       } catch (err) {
-        console.warn("[optimizer] focus helper failed", err);
+        this._moduleErrors.focus = String(err && (err.message || err));
+        console.warn("[optimizer] \u7B14\u6A21\u5F0F\u52A9\u624B\u542F\u7528\u5931\u8D25", err);
       }
     }
     this.smooth.enabled = this.settings.smoothEnabled !== false;
-    this.smooth.start();
+    try {
+      this.smooth.start();
+    } catch (err) {
+      this._moduleErrors.smooth = String(err && (err.message || err));
+      console.error("[optimizer] \u987A\u6ED1\u7F29\u653E\u542F\u7528\u5931\u8D25", err);
+    }
     this.addRibbonIcon("map", "\u5207\u6362 Excalidraw \u5C0F\u5730\u56FE", () => this.toggleActive());
     this.addCommand({
       id: "toggle-minimap",
@@ -3072,6 +3080,9 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian3.Plugin {
     });
     this.app.workspace.onLayoutReady(() => this.scheduleSync());
     this.scheduleTick();
+  }
+  moduleHealth() {
+    return { errors: this._moduleErrors || {}, failures: Array.from((this._failures || /* @__PURE__ */ new Map()).entries()) };
   }
   onunload() {
     if (this._pendingTimer) {
@@ -3140,14 +3151,14 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian3.Plugin {
       panel.applyLayout();
       panel.invalidate();
     }
-    this.tickAll();
+    this.safe("tick", () => this.tickAll());
   }
   /* --------------------------------------------------------- 面板生命周期 */
   scheduleSync() {
     if (this._syncTimer) window.clearTimeout(this._syncTimer);
     this._syncTimer = window.setTimeout(() => {
       this._syncTimer = null;
-      this.sync();
+      this.safe("navigator", () => this.sync());
     }, 120);
   }
   shouldShow(leaf) {
@@ -3179,8 +3190,27 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian3.Plugin {
         this._pendingTimer = null;
         return;
       }
-      this.sync();
+      this.safe("navigator", () => this.sync());
     }, 150);
+  }
+  /** 稳定性包装：同一处连续失败 5 次就停用该功能并提示，避免无声劣化 */
+  safe(name, fn, fallback) {
+    try {
+      const out = fn();
+      this._failures.delete(name);
+      return out;
+    } catch (err) {
+      const n = (this._failures.get(name) || 0) + 1;
+      this._failures.set(name, n);
+      if (n === 1 || n === 5) console.warn("[optimizer] " + name + " \u5931\u8D25 " + n + " \u6B21", err);
+      if (n === 5) {
+        this._moduleErrors[name] = String(err && (err.message || err));
+        if (name === "smooth" && this.smooth) this.smooth.enabled = false;
+        if (name === "navigator") this.settings.navigatorEnabled = false;
+        new import_obsidian3.Notice("Excali \u753B\u5E03\u4F18\u5316\uFF1A" + name + " \u8FDE\u7EED\u51FA\u9519\uFF0C\u5DF2\u81EA\u52A8\u505C\u7528");
+      }
+      return fallback;
+    }
   }
   sync() {
     for (const p of this.panels.values()) {
@@ -3244,7 +3274,7 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian3.Plugin {
     for (const key of Array.from(this.leafState.keys())) {
       if (!live.has(key)) this.leafState.delete(key);
     }
-    this.tickAll();
+    this.safe("tick", () => this.tickAll());
   }
   toggleActive() {
     const leaf = this.activeLeaf();
@@ -3255,7 +3285,7 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian3.Plugin {
     }
     const showing = this.shouldShow(leaf);
     this.leafState.set(leaf, showing ? "hide" : "show");
-    this.sync();
+    this.safe("navigator", () => this.sync());
   }
   /* --------------------------------------------------------- 轮询 */
   scheduleTick() {
@@ -3272,7 +3302,7 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian3.Plugin {
     const delay = fast ? Math.min(60, base) : base;
     this._tickTimer = window.setTimeout(() => {
       this._tickTimer = null;
-      this.tickAll();
+      this.safe("tick", () => this.tickAll());
       this.scheduleTick();
     }, delay);
   }
