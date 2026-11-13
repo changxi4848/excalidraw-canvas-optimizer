@@ -2904,7 +2904,8 @@ var FocusHelper = class {
       const view = leaf && leaf.view;
       const el = view && view.containerEl;
       if (!el) return;
-      const r = el.getBoundingClientRect();
+      const cv = el.querySelector("canvas.excalidraw__canvas");
+      const r = (cv && cv.clientWidth > 50 ? cv : el).getBoundingClientRect();
       if (!r || r.width < 50 || r.height < 50) return;
       const fx = (r.left + r.width / 2) / window.innerWidth;
       const fy = (r.top + r.height / 2) / window.innerHeight;
