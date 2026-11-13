@@ -279,7 +279,7 @@ export class MinimapSettingTab extends PluginSettingTab {
       );
 
     const aboutLines = [
-      "Excali 画布优化  v1.0.0",
+      "Excali 画布优化  v1.0.1",
       "作者：卢长希  https://github.com/changxi4848",
       "该插件是 Excalidraw 的第三方辅助优化插件，个人开发、随缘维护，仅支持 Windows 端。",
       "",
