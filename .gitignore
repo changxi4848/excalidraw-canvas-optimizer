@@ -1,1 +1,6 @@
+node_modules/
 dist-market/
+temp/
+out/
+helper.log
+*.log
