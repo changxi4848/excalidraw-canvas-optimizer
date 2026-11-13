@@ -25,6 +25,7 @@ export class SmoothZoom {
   start() {
     // 空闲时每 400ms 备份一帧，手势一来就能直接复用，不用现场抓帧
     this._idleSnap = null;
+    this._underlay = null;
     this._idleTimer = setInterval(() => this.captureIdle(), 500);
     this.plugin.register(() => clearInterval(this._idleTimer));
     this.session = null;
@@ -244,7 +245,7 @@ export class SmoothZoom {
       if (!cur || cur !== s) return;
       const els = cur.api.getSceneElements() || [];
       this.ensureImages(cur.api);
-      if (cur.underlayFor === els.length + ":" + cur.zoom0) return;
+      if (cur.underlayFor === this.underlayKey(els)) return;
       const b = sceneBounds(els);
       if (!b) return;
       const maxPx = 1500;
@@ -438,6 +439,17 @@ export class SmoothZoom {
       return;
     }
     this._idleSnap = { snap: c, view, zoom0: (st.zoom && st.zoom.value) || 1, scrollX0: st.scrollX, scrollY0: st.scrollY, at: performance.now() };
+    // 同时把底图预备好，手势一来直接用
+    try {
+      const els = api.getSceneElements() || [];
+      const key = this.underlayKey(els);
+      if (!this._underlay || this._underlay.key !== key) {
+        this.ensureImages(api);
+        this.buildUnderlayNow(api);
+      }
+    } catch (err) {
+      /* ignore */
+    }
   }
 
   freezeForPan() {

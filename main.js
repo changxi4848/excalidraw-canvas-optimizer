@@ -1999,6 +1999,7 @@ var SmoothZoom = class {
   }
   start() {
     this._idleSnap = null;
+    this._underlay = null;
     this._idleTimer = setInterval(() => this.captureIdle(), 500);
     this.plugin.register(() => clearInterval(this._idleTimer));
     this.session = null;
@@ -2203,7 +2204,7 @@ var SmoothZoom = class {
       if (!cur || cur !== s) return;
       const els = cur.api.getSceneElements() || [];
       this.ensureImages(cur.api);
-      if (cur.underlayFor === els.length + ":" + cur.zoom0) return;
+      if (cur.underlayFor === this.underlayKey(els)) return;
       const b = sceneBounds2(els);
       if (!b) return;
       const maxPx = 1500;
@@ -2392,6 +2393,15 @@ var SmoothZoom = class {
       return;
     }
     this._idleSnap = { snap: c, view, zoom0: st.zoom && st.zoom.value || 1, scrollX0: st.scrollX, scrollY0: st.scrollY, at: performance.now() };
+    try {
+      const els = api.getSceneElements() || [];
+      const key = this.underlayKey(els);
+      if (!this._underlay || this._underlay.key !== key) {
+        this.ensureImages(api);
+        this.buildUnderlayNow(api);
+      }
+    } catch (err) {
+    }
   }
   freezeForPan() {
     if (!this.enabled) return false;
