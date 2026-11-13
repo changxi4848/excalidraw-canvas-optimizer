@@ -249,7 +249,7 @@ export class SmoothZoom {
       if (!cur || cur !== s) return;
       const els = cur.api.getSceneElements() || [];
       this.ensureImages(cur.api);
-      if (cur.underlayFor === this.underlayKey(els)) return;
+      if (cur.underlayFor === this.underlayKey(els)) { return; }
       const b = sceneBounds(els);
       if (!b) return;
       const maxPx = 1500;
@@ -267,10 +267,11 @@ export class SmoothZoom {
       holder.width = cv.width;
       holder.height = cv.height;
       holder.getContext("2d").drawImage(cv, 0, 0);
-      holder.style.cssText = "position:absolute;left:0;top:0;transform-origin:0 0;";
+      holder.style.cssText = "position:absolute;left:0;top:0;transform-origin:0 0;visibility:hidden;";
       holder.style.width = cv.width + "px";
       holder.style.height = cv.height + "px";
       if (cur.clip && cur.overlay) cur.clip.insertBefore(holder, cur.overlay);
+      requestAnimationFrame(() => { try { holder.style.visibility = ""; } catch (err) { /* ignore */ } });
       cur.underlayEl = holder;
       this.positionUnderlay();
     }, 40);
