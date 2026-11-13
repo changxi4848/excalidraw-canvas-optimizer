@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting } from "obsidian";
+import { Notice, PluginSettingTab, Setting, requestUrl } from "obsidian";
 
 export const DEFAULT_SETTINGS = {
   /* 导航器 */
@@ -241,6 +241,30 @@ export class MinimapSettingTab extends PluginSettingTab {
 
     /* ---------------- 关于 ---------------- */
     containerEl.createEl("h3", { text: "关于" });
+
+    new Setting(containerEl)
+      .setName("检测更新")
+      .setDesc("从 GitHub 检查是否有新版本（当前 v" + this.plugin.manifest.version + "）")
+      .addButton((b) =>
+        b.setButtonText("检测").onClick(async () => {
+          const cur = this.plugin.manifest.version;
+          try {
+            const res = await requestUrl({
+              url: "https://api.github.com/repos/changxi4848/excalidraw-canvas-optimizer/releases/latest",
+              headers: { "User-Agent": "obsidian-excali-canvas-optimizer" },
+              throw: false,
+            });
+            const data = res.json || {};
+            const tag = String(data.tag_name || "");
+            const latest = tag.replace(/^v/i, "");
+            if (!latest) { new Notice("GitHub 上没有找到发布版本"); return; }
+            if (latest === cur) new Notice("已是最新版本 v" + cur);
+            else new Notice("发现新版本 " + tag + "（当前 v" + cur + "）\n" + (data.html_url || ""), 12000);
+          } catch (err) {
+            new Notice("检测失败：" + (err && err.message ? err.message : err));
+          }
+        })
+      );
 
     const aboutLines = [
       "Excali 画布优化  v1.0.0",

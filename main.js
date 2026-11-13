@@ -1963,6 +1963,29 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
       })
     );
     containerEl.createEl("h3", { text: "\u5173\u4E8E" });
+    new import_obsidian.Setting(containerEl).setName("\u68C0\u6D4B\u66F4\u65B0").setDesc("\u4ECE GitHub \u68C0\u67E5\u662F\u5426\u6709\u65B0\u7248\u672C\uFF08\u5F53\u524D v" + this.plugin.manifest.version + "\uFF09").addButton(
+      (b) => b.setButtonText("\u68C0\u6D4B").onClick(async () => {
+        const cur = this.plugin.manifest.version;
+        try {
+          const res = await (0, import_obsidian.requestUrl)({
+            url: "https://api.github.com/repos/changxi4848/excalidraw-canvas-optimizer/releases/latest",
+            headers: { "User-Agent": "obsidian-excali-canvas-optimizer" },
+            throw: false
+          });
+          const data = res.json || {};
+          const tag = String(data.tag_name || "");
+          const latest = tag.replace(/^v/i, "");
+          if (!latest) {
+            new import_obsidian.Notice("GitHub \u4E0A\u6CA1\u6709\u627E\u5230\u53D1\u5E03\u7248\u672C");
+            return;
+          }
+          if (latest === cur) new import_obsidian.Notice("\u5DF2\u662F\u6700\u65B0\u7248\u672C v" + cur);
+          else new import_obsidian.Notice("\u53D1\u73B0\u65B0\u7248\u672C " + tag + "\uFF08\u5F53\u524D v" + cur + "\uFF09\n" + (data.html_url || ""), 12e3);
+        } catch (err) {
+          new import_obsidian.Notice("\u68C0\u6D4B\u5931\u8D25\uFF1A" + (err && err.message ? err.message : err));
+        }
+      })
+    );
     const aboutLines = [
       "Excali \u753B\u5E03\u4F18\u5316  v1.0.0",
       "\u4F5C\u8005\uFF1A\u5362\u957F\u5E0C  https://github.com/changxi4848",
