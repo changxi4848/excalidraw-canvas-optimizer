@@ -305,12 +305,15 @@ def goto_fraction(fx, fy, fw=0.0, fh=0.0):
         inside = abs(cx - tx) <= 200 and abs(cy - ty) <= 200
 
     try:
-        if not inside:
+        # 只要目标点不同就移动（原来"已在区域内就跳过"会让后续切标签不再回中）
+        moved = False
+        if abs(cx - tx) > 2 or abs(cy - ty) > 2:
             win32api.SetCursorPos((tx, ty))
             log(f"光标移入 ({cx},{cy}) -> ({tx},{ty})")
+            moved = True
             time.sleep(0.05)
         jiggle()
-        return "moved" if not inside else "jiggled"
+        return "moved" if moved else "jiggled"
     except Exception as e:
         log(f"移动失败: {e}")
         return "error"
