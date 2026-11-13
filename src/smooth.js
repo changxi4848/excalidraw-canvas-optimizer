@@ -335,8 +335,8 @@ export class SmoothZoom {
     const api = view.excalidrawAPI;
     if (!api) return;
 
-    const penMode = this.settings && this.settings.inputMode === "pen";
-    const zoomGesture = ev.ctrlKey || ev.metaKey || penMode;
+
+    const zoomGesture = ev.ctrlKey || ev.metaKey;
     if (!this.session && !this.begin(view, api, zoomGesture ? "zoom" : "pan", ev)) return;
     const s = this.session;
     if (!s) return;
@@ -407,6 +407,24 @@ export class SmoothZoom {
   }
 
   /** 空格按下就冻结：用户必然是先按空格再拖 */
+  /** 底图签名：元素数量 + 版本号和，内容变了才需要重建 */
+  underlayKey(els) {
+    let sum = 0;
+    for (let i = 0; i < els.length; i += 1) sum = (sum + (els[i].versionNonce || 0)) % 2147483647;
+    return els.length + ":" + sum;
+  }
+
+  buildUnderlayNow(api) {
+    const els = api.getSceneElements() || [];
+    const b = sceneBounds(els);
+    if (!b) return null;
+    const maxPx = 1500;
+    const scale = Math.min(maxPx / b.width, maxPx / b.height, 1);
+    const cv = buildUnderlay(els, b, scale, api.getAppState().viewBackgroundColor || "#ffffff", this.imgCache);
+    this._underlay = { cv, cover: b, scale, key: this.underlayKey(els) };
+    return this._underlay;
+  }
+
   captureIdle() {
     if (this.session || !this.enabled) return;
     if (document.hidden) return;
