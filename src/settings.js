@@ -66,7 +66,7 @@ export class MinimapSettingTab extends PluginSettingTab {
 
     /* ---------------- 语言 ---------------- */
     new Setting(containerEl)
-      .setName(L("界面语言", "Language"))
+      .setName(L("界面语言（Language）", "Language"))
       .setDesc(L("设置页的显示语言，切换后立即生效。", "Language of this settings page. Applies immediately."))
       .addDropdown((d) => {
         d.addOption("zh", "中文");

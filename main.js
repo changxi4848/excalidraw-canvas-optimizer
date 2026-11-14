@@ -1856,7 +1856,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
       "A companion optimizer for Excalidraw: a minimap navigator (see the whole drawing without zooming out) plus freeze-based zoom/pan rendering that keeps pages with thousands of strokes smooth. It never modifies your documents or the undo stack."
     );
     containerEl.appendChild(intro);
-    new import_obsidian.Setting(containerEl).setName(L("\u754C\u9762\u8BED\u8A00", "Language")).setDesc(L("\u8BBE\u7F6E\u9875\u7684\u663E\u793A\u8BED\u8A00\uFF0C\u5207\u6362\u540E\u7ACB\u5373\u751F\u6548\u3002", "Language of this settings page. Applies immediately.")).addDropdown((d) => {
+    new import_obsidian.Setting(containerEl).setName(L("\u754C\u9762\u8BED\u8A00\uFF08Language\uFF09", "Language")).setDesc(L("\u8BBE\u7F6E\u9875\u7684\u663E\u793A\u8BED\u8A00\uFF0C\u5207\u6362\u540E\u7ACB\u5373\u751F\u6548\u3002", "Language of this settings page. Applies immediately.")).addDropdown((d) => {
       d.addOption("zh", "\u4E2D\u6587");
       d.addOption("en", "English");
       return d.setValue(s.uiLang || "zh").onChange(async (v) => {
