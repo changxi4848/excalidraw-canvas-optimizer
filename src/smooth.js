@@ -353,6 +353,8 @@ export class SmoothZoom {
     const view = this.view();
     if (!view) return;
     const inView = view.containerEl.contains(ev.target);
+    const api = view.excalidrawAPI;
+    if (!api) return;
     const centerMode = this.settings.centerAnchor !== false;
     // 关闭（鼠标原生）：画布外不处理，锚点跟随光标
     if (!inView && !centerMode) return;
