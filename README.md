@@ -114,6 +114,14 @@ Panel: drag the three dots to move · drag the bottom-right corner to resize · 
 
 ---
 
+## Development notes / 开发笔记
+
+Architecture, design decisions, performance data and release process: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+
+架构、关键决策、性能数据与发布流程：[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+
+---
+
 ## Author / 作者
 
 **卢长希 (Lu Changxi)** — <https://github.com/changxi4848>
