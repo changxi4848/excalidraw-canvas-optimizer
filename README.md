@@ -1,144 +1,126 @@
 # Excali Canvas Optimizer
 
-**Excali 画布优化** — [Obsidian](https://obsidian.md) + [Excalidraw](https://github.com/zsviczian/obsidian-excalidraw-plugin) 的配套优化插件。
+**Excali Canvas Optimizer（Excali 画布优化）** — a companion plugin for [Obsidian](https://obsidian.md) + [Excalidraw](https://github.com/zsviczian/obsidian-excalidraw-plugin).
 
-> 需要先安装并启用 [obsidian-excalidraw-plugin](https://github.com/zsviczian/obsidian-excalidraw-plugin)。
-
----
-
-## 它解决什么问题
-
-Excalidraw 很好用，但当一页笔记画到几千笔之后，会同时出现两个问题：
-
-1. **看不清自己在哪**——想纵览全局只能把画布缩小，缩到 10% 什么都糊了，而且越缩越卡；
-2. **缩放和拖动开始卡**——每滚一格、每拖一下，Excalidraw 都要把整页重画一遍。
-
-这个插件分别解决这两件事，并且**不修改任何文档内容、不进撤销栈**，只操作视图。
+> Requires [obsidian-excalidraw-plugin](https://github.com/zsviczian/obsidian-excalidraw-plugin) to be installed and enabled.
 
 ---
 
-## 两个功能
+## What problem it solves / 解决什么问题
 
-### 1. 导航小地图
+**English** — Excalidraw is great, but once a page grows to thousands of strokes two things break down: (1) you cannot tell where you are without zooming out, and the canvas gets blurry and slow when you do; (2) every zoom step or pan re-renders the whole scene, so gestures stutter. This plugin solves both. It never modifies your documents and never touches the undo stack — it only manipulates the view.
 
-右下角常驻一张缩略图，**只画色块和折线**（不重绘真实笔画），所以几千笔画也几乎不耗性能。
-
-- 一眼看出当前视口在整张图的哪个位置；
-- 单击任意位置把主画布移过去；
-- 蓝色方框 = 当前视口，可拖动；
-- 暗色区域 = 视口之外，拖动它移动地图本身，松手后成为"标准位置"；
-- 拖顶部三颗点移动面板、拖右下角改大小、`◎` 回正、底部横条缩放地图；
-- 切换标签页或打开文件时自动刷新，开关设置即时生效。
-
-### 2. 缩放 / 拖动性能优化
-
-Excalidraw 原版在缩放或平移时是**每帧全量重绘**。这个插件改成：
-
-- 手势开始时**冻结**当前画面（一张位图），手势进行中只移动这张图；
-- 停手后**只提交一次**，让 Excalidraw 渲染一帧高清；
-- 缩得越小、元素越多，停手判定自动延长——那种时候你是在纵览全局，不是在画。
-
-效果：手势过程从"每帧重绘整页"变成"移动一张图"，几千笔画的页面也能顺滑缩放。
+**中文** — Excalidraw 很好用，但一页笔记画到几千笔之后会出现两个问题：①想纵览全局只能缩小，缩到 10% 就糊、而且越缩越卡；②每滚一格、每拖一下都要把整页重画一遍，手势卡顿。本插件分别解决这两件事，**不修改任何文档内容、不进撤销栈**，只操作视图。
 
 ---
 
-## 安装
+## Features / 功能
 
-不在 Obsidian 社区市场内（审核中/未发布），需手动安装：
+### 1. Navigator minimap / 导航小地图
 
+**English** — A thumbnail of the whole drawing docked to the canvas corner. It draws only blocks and polylines (never real strokes), so pages with thousands of strokes stay cheap. Click to jump, drag the blue box to pan, drag the dim area to move the map itself, wheel to zoom the map. Refreshes automatically when you switch tabs or open a file.
+
+**中文** — 右下角常驻一张缩略图，**只画色块与折线**（不重绘真实笔画），几千笔画也几乎不耗性能。单击把主画布移过去；拖蓝框移动视口；拖暗色区移动地图本身并设定"标准位置"；滚轮缩放地图。切换标签或打开文件时自动刷新。
+
+### 2. Smooth zoom / pan / 缩放与拖动优化
+
+**English** — Excalidraw re-renders the whole scene on every zoom or pan step. This plugin freezes the current frame into a bitmap, moves that bitmap during the gesture, and commits once when you stop. The smaller you zoom out, the longer the settle window (you are overviewing, not drawing).
+
+**中文** — Excalidraw 原版在缩放或平移时逐帧全量重绘。本插件在手势开始时把当前画面**冻结**成一张位图，手势中只移动这张图，停手后只提交一次渲染高清。缩得越小、元素越多，停手判定自动延长。
+
+---
+
+## Installation / 安装
+
+**English**
+1. Download `main.js`, `manifest.json`, `styles.css` from [Releases](https://github.com/changxi4848/excalidraw-canvas-optimizer/releases).
+2. Put them into `<your vault>/.obsidian/plugins/excalidraw-canvas-optimizer/`.
+3. Restart Obsidian, then enable **Excali Canvas Optimizer** in **Settings → Community plugins**.
+
+**中文**
 1. 从 [Releases](https://github.com/changxi4848/excalidraw-canvas-optimizer/releases) 下载 `main.js`、`manifest.json`、`styles.css`；
-2. 放到 `<你的库>/.obsidian/plugins/excalidraw-canvas-optimizer/`；
+2. 放进 `<你的库>/.obsidian/plugins/excalidraw-canvas-optimizer/`；
 3. 重启 Obsidian，在 **设置 → 第三方插件** 里启用 **Excali Canvas Optimizer**。
 
 ---
 
-## 操作速查
+## Usage / 使用
 
-### 主画布
+### Canvas / 主画布
 
-| 操作 | 方式 |
+| Action / 操作 | How / 方式 |
 | --- | --- |
-| 缩放 | `Ctrl + 滚轮`、触摸板双指、`Ctrl + =` 放大、`Ctrl + -` 缩小、`Ctrl + 0` 复位 |
-| 平移 | `Alt + 方向键`、`空格 + 拖`、鼠标中键拖、手型工具 |
+| Zoom / 缩放 | `Ctrl + wheel`, trackpad pinch, `Ctrl + =`, `Ctrl + -`, `Ctrl + 0` |
+| Pan / 平移 | `Alt + arrow keys`, `Space + drag`, middle-button drag, hand tool |
 
-> `Ctrl±` 只在 Excalidraw 视图内被拦截，**不会缩放整个 Obsidian 界面**。
+> `Ctrl±` is intercepted only inside an Excalidraw view — it will not zoom the whole Obsidian UI.
+> `Ctrl±` 只在 Excalidraw 视图内被拦截，不会缩放整个 Obsidian 界面。
 
-### 小地图
+### Minimap / 小地图
 
-| 操作 | 效果 |
+| Action / 操作 | Effect / 效果 |
 | --- | --- |
-| 单击 | 把主画布移到该位置 |
-| 拖蓝框 | 移动视口 |
-| 拖暗色区 | 拖动地图，并设定新的标准位置 |
-| 滚轮 / 底部横条 | 缩放地图（横条越靠边越精细） |
-| `Shift + 拖` | 锁定单轴 |
-| 双击 | 缩放到整张图 |
+| Click / 单击 | Jump the canvas there / 把主画布移过去 |
+| Drag blue box / 拖蓝框 | Pan the viewport / 移动视口 |
+| Drag dim area / 拖暗色区 | Move the map, sets new standard position / 移动地图并设定标准位置 |
+| Wheel or bottom bar / 滚轮或底部横条 | Zoom the map / 缩放地图 |
+| `Shift + drag` | Lock to one axis / 锁定单轴 |
+| Double-click / 双击 | Fit the whole drawing / 缩放到整张图 |
 
-### 面板
-
-拖三颗点移动 · 拖右下角改大小 · `◎` 回正 · 鼠标移上去才显示这些控件。
+Panel: drag the three dots to move · drag the bottom-right corner to resize · `◎` recenters. Controls appear on hover.
+面板：拖三颗点移动 · 拖右下角改大小 · `◎` 回正，鼠标移上去才显示。
 
 ---
 
-## 设置
+## Settings / 设置
 
-**常用**
+**English**
+- Show navigator minimap
+- Lock zoom anchor to canvas center (off = follow cursor)
+- Smooth zoom (freeze rendering)
+- Suppress Excalidraw "Show hint"
+- Settle delay (default 120 ms)
+- Advanced: minimap refresh interval, reset all settings, check for updates
 
+**中文**
 - 显示导航小地图
 - 缩放锚点固定在画布中心（关闭则跟随光标）
-- 顺滑缩放
+- 顺滑缩放（冻结渲染）
 - 关闭画布提示（Show hint）
 - 停手判定（默认 120ms）
-
-**高级**
-
-- 小地图刷新间隔（越大越省 CPU、跟手越迟钝；拖动时自动提速到 60ms）
-- 重置所有设置
-- 检测更新（比对 GitHub 最新 Release）
+- 高级：小地图刷新间隔、重置所有设置、检测更新
 
 ---
 
-## 已知限制
+## Known limitations / 已知限制
 
-- **光标不在画布上时，滚轮事件由 Obsidian 界面接收，插件收不到**，因此无法实现"画布外滚轮缩放"。TourBox 这类滚轮设备建议在驱动里把旋钮映射成纯键盘按键（`Ctrl + =` / `Ctrl + -`）。
-- 手势中画面是冻结位图，**放大会略糊**，松手立刻恢复清晰；外围区域是低清底图。
-- 缩得很小之后再拖动/缩放，停手判定会自动延长（能省则省）。
-- **仅支持 Windows 桌面端**，不含任何外部依赖（无 Python、无后台进程）。
+**English**
+- Wheel events outside the canvas are consumed by the Obsidian UI, so "zoom while the cursor is off-canvas" is not possible from a plugin. Map wheel devices such as TourBox to plain keys (`Ctrl + =` / `Ctrl + -`) instead.
+- During gestures the canvas is a frozen bitmap: zooming in looks slightly soft and the surrounding area is a low-res underlay. Both are restored when you release.
+- Windows desktop only. No external dependencies, no background processes, no Python.
 
----
-
-## 性能
-
-| 操作 | 频率 | 开销 |
-| --- | --- | --- |
-| 小地图平移跟随 | 每帧 | 0.01–0.02 ms |
-| 小地图图层重建 | 内容变化时 | 7–10 ms / 4600 元素 |
-| 冻结抓帧 | 手势开始（空闲时预抓） | 1–3 ms |
-| 手势中移动画面 | 每帧 | 一个 CSS transform，≈ 0 |
-
-真正的重活（全量重绘）只发生在**你停手之后**。
-
-单核 CPU 频率最关键，核显足够；屏幕分辨率 × DPR 会线性放大开销。
+**中文**
+- 光标不在画布上时，滚轮事件由 Obsidian 界面接收，插件收不到，所以"画布外滚轮缩放"无法实现。TourBox 这类滚轮设备建议在驱动里映射成纯键盘按键（`Ctrl + =` / `Ctrl + -`）。
+- 手势中画面是冻结位图：放大时略糊，外围是低清底图，松手即恢复清晰。
+- 仅支持 Windows 桌面端，无外部依赖、无后台进程、无 Python。
 
 ---
 
-## English (short)
+## Performance / 性能
 
-A companion plugin for Excalidraw in Obsidian:
+**English** — The minimap only redraws blocks and polylines; per-frame panning costs 0.01–0.02 ms, layer rebuild 7–10 ms for 4,600 elements, freeze capture 1–3 ms. The expensive full re-render happens only once, after you stop. A fast single CPU core matters most; integrated graphics are enough.
 
-- **Navigator minimap** — thumbnail of the whole drawing that draws only blocks and polylines, so pages with thousands of strokes stay cheap. Click to jump, drag the box to pan, wheel to zoom the map.
-- **Smooth zoom / pan** — freezes the current frame, moves a single bitmap during the gesture, commits once on release instead of re-rendering every frame.
-
-Windows desktop only. No telemetry, no background processes, does not modify your documents or the undo stack. MIT licensed.
+**中文** — 小地图只画色块与折线：平移 0.01–0.02 ms/帧，图层重建约 7–10 ms（4600 元素），冻结抓帧 1–3 ms。真正的全量重绘只在你停手之后发生一次。单核 CPU 频率最关键，核显足够。
 
 ---
 
-## 作者
+## Author / 作者
 
-**卢长希** — <https://github.com/changxi4848>
+**卢长希 (Lu Changxi)** — <https://github.com/changxi4848>
 
-个人开发维护，仅供学习使用参考。不承诺响应时间。
+Personal project, provided as-is for learning and reference. No support guarantees.
+个人开发维护，仅供学习使用参考，不承诺响应时间。
 
-## 许可
+## License / 许可
 
 [MIT](LICENSE)
