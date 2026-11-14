@@ -163,8 +163,8 @@ export class SmoothZoom {
       scrollX: baseScrollX,
       scrollY: baseScrollY,
       // 笔模式的滚轮事件来自笔尖，和回中后的鼠标光标不是一回事，统一锚在画布中心
-      ax: (ev && this.settings.inputMode !== "pen") ? ev.clientX - rect.left : rect.width / 2,
-      ay: (ev && this.settings.inputMode !== "pen") ? ev.clientY - rect.top : rect.height / 2,
+      ax: (ev && this.settings.centerAnchor === false) ? ev.clientX - rect.left : rect.width / 2,
+      ay: (ev && this.settings.centerAnchor === false) ? ev.clientY - rect.top : rect.height / 2,
       startClientX: ev ? ev.clientX : 0,
       startClientY: ev ? ev.clientY : 0,
     };
@@ -341,7 +341,7 @@ export class SmoothZoom {
     if (!view) return;
     // 笔模式（TourBox）：光标不一定要在画布上，否则滚轮会被路由到别的面板
     const inView = view.containerEl.contains(ev.target);
-    if (!inView && this.settings.inputMode !== "pen") return;
+    if (!inView && this.settings.wheelGlobal === false) return;
     const api = view.excalidrawAPI;
     if (!api) return;
 

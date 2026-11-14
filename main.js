@@ -1823,8 +1823,9 @@ var DEFAULT_SETTINGS = {
   mapScale: 0.11,
   standardX: 0,
   standardY: 0,
-  /* 交互模式 */
-  inputMode: "mouse",
+  /* 缩放锚点 */
+  centerAnchor: true,
+  wheelGlobal: true,
   /* 顺滑缩放 */
   smoothEnabled: true,
   smoothSettleMs: 120,
@@ -1853,16 +1854,12 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u4EA4\u4E92\u6A21\u5F0F").setDesc(
-      "\u9F20\u6807\uFF1A\u6EDA\u8F6E\u7F29\u653E\u5C0F\u5730\u56FE\uFF0CCtrl+\u6EDA\u8F6E\u7F29\u653E\u4E3B\u753B\u5E03\u3002\u7B14\uFF08\u6570\u4F4D\u677F\uFF09\uFF1A\u6EDA\u8F6E\u76F4\u63A5\u7F29\u653E\u4E3B\u753B\u5E03\u4E0D\u7528\u6309 Ctrl\uFF0C\u5E76\u63A5\u7BA1\u952E\u76D8\u7126\u70B9\u4E0E\u6EDA\u8F6E\u76EE\u6807\uFF08TourBox \u65CB\u94AE\u53EF\u7528\uFF09\u3002"
-    ).addDropdown((d) => {
-      d.addOption("mouse", "\u9F20\u6807");
-      d.addOption("pen", "\u7B14\uFF08\u6570\u4F4D\u677F\uFF09");
-      return d.setValue(s.inputMode || "mouse").onChange(async (v) => {
-        await this.plugin.setInputMode(v);
+    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u70B9\u56FA\u5B9A\u5728\u753B\u5E03\u4E2D\u5FC3").setDesc("\u5F00\u542F\uFF1A\u65E0\u8BBA\u6EDA\u8F6E\u6765\u81EA\u9F20\u6807\u3001\u89E6\u6478\u677F\u8FD8\u662F\u6570\u4F4D\u677F\uFF0C\u90FD\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\u7F29\u653E\u3002\u5173\u95ED\uFF1A\u56F4\u7ED5\u5F53\u524D\u5149\u6807\u4F4D\u7F6E\u7F29\u653E\u3002").addToggle(
+      (t) => t.setValue(s.centerAnchor !== false).onChange(async (v) => {
+        s.centerAnchor = v;
         await this.plugin.saveSettingsAndSync();
-      });
-    });
+      })
+    );
     new import_obsidian.Setting(containerEl).setName("\u987A\u6ED1\u7F29\u653E").setDesc("\u7F29\u653E\u65F6\u51BB\u7ED3\u753B\u9762\u3001\u53EA\u79FB\u52A8\u4E00\u5F20\u4F4D\u56FE\uFF0C\u505C\u624B\u540E\u518D\u6E32\u67D3\u9AD8\u6E05\u3002\u5173\u6389\u5C31\u662F Excalidraw \u539F\u751F\u884C\u4E3A\u3002").addToggle(
       (t) => t.setValue(s.smoothEnabled !== false).onChange(async (v) => {
         s.smoothEnabled = v;
@@ -1895,6 +1892,12 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
     hint.className = "setting-item-description";
     hint.textContent = "\u4F4D\u7F6E\u3001\u5927\u5C0F\u3001\u5730\u56FE\u6BD4\u4F8B\u4E0D\u5728\u8FD9\u91CC\u8C03\uFF1A\u76F4\u63A5\u62D6\u9762\u677F\u9876\u90E8\u7684\u4E09\u9897\u70B9\u79FB\u52A8\u3001\u62D6\u53F3\u4E0B\u89D2\u659C\u7EB9\u6539\u5927\u5C0F\u3001\u6EDA\u8F6E\u6216\u7528\u5E95\u90E8\u6A2A\u6761\u6539\u6BD4\u4F8B\u3002";
     adv.appendChild(hint);
+    new import_obsidian.Setting(adv).setName("\u6EDA\u8F6E\u5168\u5C40\u751F\u6548").setDesc("\u5F00\u542F\uFF1A\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\uFF08\u4F8B\u5982\u505C\u5728\u4FA7\u8FB9\u680F\uFF09\u65F6\u6EDA\u8F6E\u4E5F\u7F29\u653E\u753B\u5E03\uFF0C\u9002\u5408 TourBox/\u6570\u4F4D\u677F\u3002\u5173\u95ED\uFF1A\u53EA\u6709\u5149\u6807\u5728\u753B\u5E03\u4E0A\u624D\u54CD\u5E94\u3002").addToggle(
+      (t) => t.setValue(s.wheelGlobal !== false).onChange(async (v) => {
+        s.wheelGlobal = v;
+        await this.plugin.saveSettingsAndSync();
+      })
+    );
     new import_obsidian.Setting(adv).setName("\u81EA\u52A8\u663E\u793A\u5C0F\u5730\u56FE").setDesc("\u6253\u5F00 Excalidraw \u753B\u5E03\u65F6\u81EA\u52A8\u51FA\u73B0\uFF1B\u5173\u6389\u540E\u9700\u624B\u52A8\u5524\u51FA\u3002").addToggle(
       (t) => t.setValue(s.autoShow).onChange(async (v) => {
         s.autoShow = v;
@@ -2151,8 +2154,8 @@ var SmoothZoom = class {
       scrollX: baseScrollX,
       scrollY: baseScrollY,
       // 笔模式的滚轮事件来自笔尖，和回中后的鼠标光标不是一回事，统一锚在画布中心
-      ax: ev && this.settings.inputMode !== "pen" ? ev.clientX - rect.left : rect.width / 2,
-      ay: ev && this.settings.inputMode !== "pen" ? ev.clientY - rect.top : rect.height / 2,
+      ax: ev && this.settings.centerAnchor === false ? ev.clientX - rect.left : rect.width / 2,
+      ay: ev && this.settings.centerAnchor === false ? ev.clientY - rect.top : rect.height / 2,
       startClientX: ev ? ev.clientX : 0,
       startClientY: ev ? ev.clientY : 0
     };
@@ -2330,7 +2333,7 @@ var SmoothZoom = class {
     const view = this.view();
     if (!view) return;
     const inView = view.containerEl.contains(ev.target);
-    if (!inView && this.settings.inputMode !== "pen") return;
+    if (!inView && this.settings.wheelGlobal === false) return;
     const api = view.excalidrawAPI;
     if (!api) return;
     const zoomGesture = ev.ctrlKey || ev.metaKey;
