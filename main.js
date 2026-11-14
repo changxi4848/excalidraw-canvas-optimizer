@@ -2019,6 +2019,13 @@ var SmoothZoom = class {
     this.settings = plugin.settings;
   }
   start() {
+    this._penAt = 0;
+    this.plugin.registerDomEvent(window, "pointerdown", (ev) => {
+      if (ev.pointerType === "pen" || ev.pointerType === "touch") this._penAt = performance.now();
+    }, { capture: true, passive: true });
+    this.plugin.registerDomEvent(window, "pointermove", (ev) => {
+      if (ev.pointerType === "pen") this._penAt = performance.now();
+    }, { capture: true, passive: true });
     this._idleSnap = null;
     this._underlay = null;
     this._idleTimer = setInterval(() => this.captureIdle(), 500);
@@ -2336,7 +2343,8 @@ var SmoothZoom = class {
     const view = this.view();
     if (!view) return;
     const inView = view.containerEl.contains(ev.target);
-    const isZoomKey = ev.ctrlKey || ev.metaKey;
+    const penRecent = performance.now() - (this._penAt || 0) < 3e3;
+    const isZoomKey = ev.ctrlKey || ev.metaKey || penRecent && !inView;
     if (!inView && !isZoomKey) return;
     this._anchorCenter = !inView || this.settings.centerAnchor !== false;
     const api = view.excalidrawAPI;
