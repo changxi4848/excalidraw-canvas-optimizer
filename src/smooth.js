@@ -49,6 +49,7 @@ export class SmoothZoom {
       }
     });
     this.plugin.registerDomEvent(window, "keydown", (ev) => this.onZoomKey(ev), { capture: true });
+    this.plugin.registerDomEvent(window, "keydown", (ev) => this.onPanKey(ev), { capture: true });
     this.plugin.registerDomEvent(window, "keyup", (ev) => {
       if (ev.code === "Space") this.spaceDown = false;
     });
@@ -381,13 +382,38 @@ export class SmoothZoom {
   }
 
   /** Ctrl/⌘ +/-/0：Excalidraw 的缩放快捷键，也走冻结，避免全量重绘卡一下 */
+  /** Alt + 方向键平移画布（替代滚轮上下滚） */
+  onPanKey(ev) {
+    if (!this.enabled) return;
+    if (!ev.altKey || ev.ctrlKey || ev.metaKey) return;
+    const dirs = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [1, 0], ArrowRight: [-1, 0] };
+    const d = dirs[ev.key];
+    if (!d) return;
+    const view = this.view();
+    if (!view) return;
+    const api = view.excalidrawAPI;
+    if (!api) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (!this.session && !this.begin(view, api, "pan", null)) return;
+    const s = this.session;
+    if (!s) return;
+    const step = 120 / (s.drawZoom || s.zoom); // 每按一次约 120 屏幕像素
+    s.scrollX += d[0] * step;
+    s.scrollY += d[1] * step;
+    this.applyTransform();
+    this.armWatchdog();
+    this.schedule();
+  }
+
   onZoomKey(ev) {
     if (!this.enabled) return;
     if (!(ev.ctrlKey || ev.metaKey)) return;
     const k = ev.key;
     if (k !== "=" && k !== "+" && k !== "-" && k !== "0") return;
     const view = this.view();
-    if (!view || !view.containerEl.contains(ev.target)) return;
+    // 只要当前是 Excalidraw 视图就拦截，否则 Electron 会把"Ctrl±"当成整个界面缩放
+    if (!view) return;
     const api = view.excalidrawAPI;
     if (!api) return;
     if (!this.session && !this.begin(view, api, "zoom", null)) return;
