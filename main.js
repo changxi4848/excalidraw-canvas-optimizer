@@ -2328,7 +2328,7 @@ var SmoothZoom = class {
     if (!this.session && !this.begin(view, api, "pan", null)) return;
     const s = this.session;
     if (!s) return;
-    const step = 120 / (s.drawZoom || s.zoom);
+    const step = 60 / (s.drawZoom || s.zoom);
     s.scrollX += d[0] * step;
     s.scrollY += d[1] * step;
     this.applyTransform();

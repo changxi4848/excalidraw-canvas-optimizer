@@ -398,7 +398,7 @@ export class SmoothZoom {
     if (!this.session && !this.begin(view, api, "pan", null)) return;
     const s = this.session;
     if (!s) return;
-    const step = 120 / (s.drawZoom || s.zoom); // 每按一次约 120 屏幕像素
+    const step = 60 / (s.drawZoom || s.zoom); // 每按一次约 60 屏幕像素，接近滚轮一格
     s.scrollX += d[0] * step;
     s.scrollY += d[1] * step;
     this.applyTransform();
