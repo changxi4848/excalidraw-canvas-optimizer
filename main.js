@@ -2868,6 +2868,57 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
     }
     this.scheduleTick();
   }
+  shouldShow(leaf) {
+    const state = this.leafState.get(leaf);
+    if (state === "show") return true;
+    if (state === "hide") return false;
+    return Boolean(this.settings.autoShow);
+  }
+  /** 当前活动叶（兼容新旧 API）。 */
+  activeLeaf() {
+    const workspace = this.app.workspace;
+    if (typeof workspace.getMostRecentLeaf === "function") {
+      const leaf = workspace.getMostRecentLeaf();
+      if (leaf) return leaf;
+    }
+    return workspace.activeLeaf || null;
+  }
+  /** 轮询待挂载的画布：加载完（能拿到 canvas）就挂上小地图 */
+  ensurePendingLoop() {
+    if (this._pendingTimer) return;
+    this._pendingTimer = setInterval(() => {
+      const now = performance.now();
+      for (const [leaf, at] of Array.from(this.pending.entries())) {
+        const alive = leaf && leaf.view && leaf.view.containerEl && leaf.view.containerEl.isConnected;
+        if (!alive || now - at > 15e3) this.pending.delete(leaf);
+      }
+      if (!this.pending.size) {
+        clearInterval(this._pendingTimer);
+        this._pendingTimer = null;
+        return;
+      }
+      this.safe("navigator", () => this.sync());
+    }, 150);
+  }
+  /** 稳定性包装：同一处连续失败 5 次就停用该功能并提示，避免无声劣化 */
+  safe(name, fn, fallback) {
+    try {
+      const out = fn();
+      this._failures.delete(name);
+      return out;
+    } catch (err) {
+      const n = (this._failures.get(name) || 0) + 1;
+      this._failures.set(name, n);
+      if (n === 1 || n === 5) console.warn("[optimizer] " + name + " \u5931\u8D25 " + n + " \u6B21", err);
+      if (n === 5) {
+        this._moduleErrors[name] = String(err && (err.message || err));
+        if (name === "smooth" && this.smooth) this.smooth.enabled = false;
+        if (name === "navigator") this.settings.navigatorEnabled = false;
+        new import_obsidian2.Notice("Excali \u753B\u5E03\u4F18\u5316\uFF1A" + name + " \u8FDE\u7EED\u51FA\u9519\uFF0C\u5DF2\u81EA\u52A8\u505C\u7528");
+      }
+      return fallback;
+    }
+  }
   sync() {
     for (const p of this.panels.values()) {
       p._st = null;

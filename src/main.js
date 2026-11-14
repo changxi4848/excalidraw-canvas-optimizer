@@ -135,6 +135,61 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
     this.scheduleTick();
   }
 
+  shouldShow(leaf) {
+    const state = this.leafState.get(leaf);
+    if (state === "show") return true;
+    if (state === "hide") return false;
+    return Boolean(this.settings.autoShow);
+  }
+
+  /** 当前活动叶（兼容新旧 API）。 */
+  activeLeaf() {
+    const workspace = this.app.workspace;
+    if (typeof workspace.getMostRecentLeaf === "function") {
+      const leaf = workspace.getMostRecentLeaf();
+      if (leaf) return leaf;
+    }
+    return workspace.activeLeaf || null;
+  }
+
+  /** 轮询待挂载的画布：加载完（能拿到 canvas）就挂上小地图 */
+  ensurePendingLoop() {
+    if (this._pendingTimer) return;
+    this._pendingTimer = setInterval(() => {
+      const now = performance.now();
+      for (const [leaf, at] of Array.from(this.pending.entries())) {
+        const alive = leaf && leaf.view && leaf.view.containerEl && leaf.view.containerEl.isConnected;
+        if (!alive || now - at > 15000) this.pending.delete(leaf);
+      }
+      if (!this.pending.size) {
+        clearInterval(this._pendingTimer);
+        this._pendingTimer = null;
+        return;
+      }
+      this.safe("navigator", () => this.sync());
+    }, 150);
+  }
+
+  /** 稳定性包装：同一处连续失败 5 次就停用该功能并提示，避免无声劣化 */
+  safe(name, fn, fallback) {
+    try {
+      const out = fn();
+      this._failures.delete(name);
+      return out;
+    } catch (err) {
+      const n = (this._failures.get(name) || 0) + 1;
+      this._failures.set(name, n);
+      if (n === 1 || n === 5) console.warn("[optimizer] " + name + " 失败 " + n + " 次", err);
+      if (n === 5) {
+        this._moduleErrors[name] = String(err && (err.message || err));
+        if (name === "smooth" && this.smooth) this.smooth.enabled = false;
+        if (name === "navigator") this.settings.navigatorEnabled = false;
+        new Notice("Excali 画布优化：" + name + " 连续出错，已自动停用");
+      }
+      return fallback;
+    }
+  }
+
   sync() {
     // 侧边栏开合会改变画布尺寸：把每个面板的视口缓存清掉，下一帧按新尺寸重算
     for (const p of this.panels.values()) {
