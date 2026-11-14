@@ -128,6 +128,13 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
     }
   }
 
+  /** 保存设置并立即生效：所有设置项都走这里 */
+  async saveSettingsAndSync() {
+    try { await this.saveData(this.settings); } catch (err) { /* ignore */ }
+    try { this.sync(); } catch (err) { /* ignore */ }
+    this.scheduleTick();
+  }
+
   sync() {
     // 侧边栏开合会改变画布尺寸：把每个面板的视口缓存清掉，下一帧按新尺寸重算
     for (const p of this.panels.values()) {

@@ -23,11 +23,6 @@ export class SmoothZoom {
   }
 
   start() {
-    // 记录最近一次"笔"输入：笔作为最近设备时，滚轮事件常常丢失 Ctrl 状态
-    this._penAt = 0;
-    this.plugin.registerDomEvent(window, "pointerdown", (ev) => {
-      if (ev.pointerType === "pen" || ev.pointerType === "touch") this._penAt = performance.now();
-    }, { capture: true, passive: true });
     this.plugin.registerDomEvent(window, "pointermove", (ev) => {
       if (ev.pointerType === "pen") this._penAt = performance.now();
     }, { capture: true, passive: true });
@@ -358,8 +353,7 @@ export class SmoothZoom {
     const view = this.view();
     if (!view) return;
     const inView = view.containerEl.contains(ev.target);
-    const penRecent = performance.now() - (this._penAt || 0) < 3000;
-    const isZoomKey = ev.ctrlKey || ev.metaKey || (penRecent && !inView);
+    const isZoomKey = ev.ctrlKey || ev.metaKey;
     // 普通滚轮只在画布内生效；Ctrl+滚轮在任何位置都缩放画布（光标停在侧边栏/标签栏时也能用）
     if (!inView && !isZoomKey) return;
     this._anchorCenter = !inView || this.settings.centerAnchor !== false;
@@ -367,7 +361,7 @@ export class SmoothZoom {
     if (!api) return;
 
 
-    const zoomGesture = ev.ctrlKey || ev.metaKey;
+    const zoomGesture = forceZoom || ev.ctrlKey || ev.metaKey;
     if (!this.session && !this.begin(view, api, zoomGesture ? "zoom" : "pan", ev)) return;
     const s = this.session;
     if (!s) return;

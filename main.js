@@ -1851,7 +1851,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u70B9\u56FA\u5B9A\u5728\u753B\u5E03\u4E2D\u5FC3").setDesc("\u5F00\u542F\uFF1A\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\u7F29\u653E\u3002\u5173\u95ED\uFF1A\u56F4\u7ED5\u5F53\u524D\u5149\u6807\u4F4D\u7F6E\u7F29\u653E\u3002\u5EFA\u8BAE\u6570\u4F4D\u677F\u5F00\u542F\uFF0C\u5426\u5219\u7F29\u653E\u951A\u70B9\u4EC5\u8DDF\u968F\u9F20\u6807\u5149\u6807\u6700\u540E\u4F4D\u7F6E\u3002").addToggle(
+    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u5B9A\u4E2D\u5FC3 + \u5168\u5C40\u6EDA\u52A8\u7F29\u653E").setDesc("\u5F00\u542F\uFF1A\u7F29\u653E\u59CB\u7EC8\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\uFF1B\u4E14\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\uFF08\u6807\u7B7E\u680F\u3001\u4FA7\u8FB9\u680F\uFF09\u65F6\u6EDA\u8F6E\u4E5F\u80FD\u7F29\u653E\u3002\u5EFA\u8BAE\u4F7F\u7528\u6570\u4F4D\u677F\u65F6\u5F00\u542F\uFF0C\u5426\u5219\u5207\u6362\u6807\u7B7E\u9875\u540E\u5BB9\u6613\u51FA\u73B0\u7F29\u653E\u5931\u7075\u3002\u5173\u95ED\u5219\u6062\u590D\u9F20\u6807\u539F\u751F\u884C\u4E3A\uFF08\u951A\u70B9\u8DDF\u968F\u5149\u6807\u3001\u753B\u5E03\u5916\u6EDA\u8F6E\u65E0\u6548\uFF09\u3002").addToggle(
       (t) => t.setValue(s.centerAnchor !== false).onChange(async (v) => {
         s.centerAnchor = v;
         await this.plugin.saveSettingsAndSync();
@@ -2019,10 +2019,6 @@ var SmoothZoom = class {
     this.settings = plugin.settings;
   }
   start() {
-    this._penAt = 0;
-    this.plugin.registerDomEvent(window, "pointerdown", (ev) => {
-      if (ev.pointerType === "pen" || ev.pointerType === "touch") this._penAt = performance.now();
-    }, { capture: true, passive: true });
     this.plugin.registerDomEvent(window, "pointermove", (ev) => {
       if (ev.pointerType === "pen") this._penAt = performance.now();
     }, { capture: true, passive: true });
@@ -2343,13 +2339,12 @@ var SmoothZoom = class {
     const view = this.view();
     if (!view) return;
     const inView = view.containerEl.contains(ev.target);
-    const penRecent = performance.now() - (this._penAt || 0) < 3e3;
-    const isZoomKey = ev.ctrlKey || ev.metaKey || penRecent && !inView;
+    const isZoomKey = ev.ctrlKey || ev.metaKey;
     if (!inView && !isZoomKey) return;
     this._anchorCenter = !inView || this.settings.centerAnchor !== false;
     const api = view.excalidrawAPI;
     if (!api) return;
-    const zoomGesture = ev.ctrlKey || ev.metaKey;
+    const zoomGesture = forceZoom || ev.ctrlKey || ev.metaKey;
     if (!this.session && !this.begin(view, api, zoomGesture ? "zoom" : "pan", ev)) return;
     const s = this.session;
     if (!s) return;
@@ -2860,6 +2855,18 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
       }
     } catch (err) {
     }
+  }
+  /** 保存设置并立即生效：所有设置项都走这里 */
+  async saveSettingsAndSync() {
+    try {
+      await this.saveData(this.settings);
+    } catch (err) {
+    }
+    try {
+      this.sync();
+    } catch (err) {
+    }
+    this.scheduleTick();
   }
   sync() {
     for (const p of this.panels.values()) {
