@@ -353,15 +353,12 @@ export class SmoothZoom {
     const view = this.view();
     if (!view) return;
     const inView = view.containerEl.contains(ev.target);
-    const isZoomKey = ev.ctrlKey || ev.metaKey;
-    // 普通滚轮只在画布内生效；Ctrl+滚轮在任何位置都缩放画布（光标停在侧边栏/标签栏时也能用）
-    if (!inView && !isZoomKey) return;
-    this._anchorCenter = !inView || this.settings.centerAnchor !== false;
-    const api = view.excalidrawAPI;
-    if (!api) return;
-
-
-    const zoomGesture = forceZoom || ev.ctrlKey || ev.metaKey;
+    const centerMode = this.settings.centerAnchor !== false;
+    // 关闭（鼠标原生）：画布外不处理，锚点跟随光标
+    if (!inView && !centerMode) return;
+    // 开启：锚点锁定画布中心；画布外的滚轮也直接当缩放
+    this._anchorCenter = centerMode;
+    const zoomGesture = (centerMode && !inView) ? true : (ev.ctrlKey || ev.metaKey);
     if (!this.session && !this.begin(view, api, zoomGesture ? "zoom" : "pan", ev)) return;
     const s = this.session;
     if (!s) return;

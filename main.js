@@ -1159,8 +1159,8 @@ var MinimapPanel = class {
     if (!this._viewReady) return;
     const size = this.measure();
     const view = this.leafView;
-    const api = view && view.excalidrawAPI;
-    const st = api && typeof api.getAppState === "function" ? api.getAppState() : null;
+    const api2 = view && view.excalidrawAPI;
+    const st = api2 && typeof api2.getAppState === "function" ? api2.getAppState() : null;
     if (st) this._viewport = visibleSceneRect(st, size);
     const vp = this._viewport;
     if (!vp) return;
@@ -1697,12 +1697,12 @@ var MinimapPanel = class {
     if (this.el.clientWidth < 8) return false;
     const view = this.leafView;
     if (!view || view.getViewType && view.getViewType() !== "excalidraw") return false;
-    const api = view.excalidrawAPI;
-    if (!api || typeof api.getSceneElements !== "function") {
+    const api2 = view.excalidrawAPI;
+    if (!api2 || typeof api2.getSceneElements !== "function") {
       this.renderPlaceholder("\u7B49\u5F85\u753B\u5E03\u52A0\u8F7D\u2026");
       return false;
     }
-    const st = api.getAppState();
+    const st = api2.getAppState();
     if (!st) return false;
     this._placeholder = null;
     const zoom = zoomOf(st);
@@ -1710,7 +1710,7 @@ var MinimapPanel = class {
     const vp = visibleSceneRect(st, this.sceneSize());
     this._viewport = vp;
     if (this._viewReady) this.updateBox(this.theme());
-    const els = api.getSceneElements() || [];
+    const els = api2.getSceneElements() || [];
     let sceneChanged = false;
     if (els !== this._els) {
       const sig = sceneSignature(els);
@@ -1851,7 +1851,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u5B9A\u4E2D\u5FC3 + \u5168\u5C40\u6EDA\u52A8\u7F29\u653E").setDesc("\u5F00\u542F\uFF1A\u7F29\u653E\u59CB\u7EC8\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\uFF1B\u4E14\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\uFF08\u6807\u7B7E\u680F\u3001\u4FA7\u8FB9\u680F\uFF09\u65F6\u6EDA\u8F6E\u4E5F\u80FD\u7F29\u653E\u3002\u5EFA\u8BAE\u4F7F\u7528\u6570\u4F4D\u677F\u65F6\u5F00\u542F\uFF0C\u5426\u5219\u5207\u6362\u6807\u7B7E\u9875\u540E\u5BB9\u6613\u51FA\u73B0\u7F29\u653E\u5931\u7075\u3002\u5173\u95ED\u5219\u6062\u590D\u9F20\u6807\u539F\u751F\u884C\u4E3A\uFF08\u951A\u70B9\u8DDF\u968F\u5149\u6807\u3001\u753B\u5E03\u5916\u6EDA\u8F6E\u65E0\u6548\uFF09\u3002").addToggle(
+    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u5B9A\u4E2D\u5FC3 + \u5168\u5C40\u6EDA\u52A8\u7F29\u653E").setDesc("\u4F7F\u7528\u6570\u4F4D\u677F\u65F6\u5F3A\u70C8\u5EFA\u8BAE\u5F00\u542F\uFF0C\u5426\u5219\u5207\u6362\u6807\u7B7E\u9875\u540E\u5BB9\u6613\u51FA\u73B0\u7F29\u653E\u5931\u7075\u3002\u5F00\u542F\u540E\uFF1A\u7F29\u653E\u59CB\u7EC8\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\uFF1B\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\uFF08\u6807\u7B7E\u680F\u3001\u4FA7\u8FB9\u680F\uFF09\u65F6\u6EDA\u8F6E\u4E5F\u80FD\u7F29\u653E\u3002\u5173\u95ED\u5219\u6062\u590D\u9F20\u6807\u539F\u751F\u884C\u4E3A\u3002").addToggle(
       (t) => t.setValue(s.centerAnchor !== false).onChange(async (v) => {
         s.centerAnchor = v;
         await this.plugin.saveSettingsAndSync();
@@ -2099,8 +2099,8 @@ var SmoothZoom = class {
     return { base, all: list };
   }
   /* ------------------------------------------------------------ 冻结 */
-  begin(view, api, mode, ev) {
-    const st = api.getAppState();
+  begin(view, api2, mode, ev) {
+    const st = api2.getAppState();
     const cvs = this.sceneCanvases(view);
     if (!cvs) return false;
     const base = cvs.base;
@@ -2144,7 +2144,7 @@ var SmoothZoom = class {
     const baseScrollY = reuse ? reuse.scrollY0 : st.scrollY;
     this.session = {
       view,
-      api,
+      api: api2,
       mode,
       base,
       canvases: cvs.all,
@@ -2156,7 +2156,7 @@ var SmoothZoom = class {
       offL: Number(st.offsetLeft) || 0,
       offT: Number(st.offsetTop) || 0,
       zoom,
-      elementCount: (st.__els || api.getSceneElements() || []).length,
+      elementCount: (st.__els || api2.getSceneElements() || []).length,
       scrollX: baseScrollX,
       scrollY: baseScrollY,
       // 笔模式的滚轮事件来自笔尖，和回中后的鼠标光标不是一回事，统一锚在画布中心
@@ -2212,11 +2212,11 @@ var SmoothZoom = class {
     for (const el of s.hiddenText) el.classList.add("esz-hidden");
   }
   /** 起手之后异步铺一张整图低清底图，专门用来显示"照片"之外的外围 */
-  ensureImages(api) {
+  ensureImages(api2) {
     if (!this.imgCache) this.imgCache = /* @__PURE__ */ new Map();
     let files = null;
     try {
-      files = api.getFiles ? api.getFiles() : null;
+      files = api2.getFiles ? api2.getFiles() : null;
     } catch (err) {
       files = null;
     }
@@ -2339,12 +2339,10 @@ var SmoothZoom = class {
     const view = this.view();
     if (!view) return;
     const inView = view.containerEl.contains(ev.target);
-    const isZoomKey = ev.ctrlKey || ev.metaKey;
-    if (!inView && !isZoomKey) return;
-    this._anchorCenter = !inView || this.settings.centerAnchor !== false;
-    const api = view.excalidrawAPI;
-    if (!api) return;
-    const zoomGesture = forceZoom || ev.ctrlKey || ev.metaKey;
+    const centerMode = this.settings.centerAnchor !== false;
+    if (!inView && !centerMode) return;
+    this._anchorCenter = centerMode;
+    const zoomGesture = centerMode && !inView ? true : ev.ctrlKey || ev.metaKey;
     if (!this.session && !this.begin(view, api, zoomGesture ? "zoom" : "pan", ev)) return;
     const s = this.session;
     if (!s) return;
@@ -2382,14 +2380,14 @@ var SmoothZoom = class {
     if (k !== "=" && k !== "+" && k !== "-" && k !== "0") return;
     const view = this.view();
     if (!view || !view.containerEl.contains(ev.target)) return;
-    const api = view.excalidrawAPI;
-    if (!api) return;
-    if (!this.session && !this.begin(view, api, "zoom", null)) return;
+    const api2 = view.excalidrawAPI;
+    if (!api2) return;
+    if (!this.session && !this.begin(view, api2, "zoom", null)) return;
     const s = this.session;
     if (!s) return;
     ev.preventDefault();
     ev.stopPropagation();
-    const st = api.getAppState();
+    const st = api2.getAppState();
     const offL = Number(st.offsetLeft) || 0;
     const offT = Number(st.offsetTop) || 0;
     const ax = s.rect.width / 2;
@@ -2415,13 +2413,13 @@ var SmoothZoom = class {
     for (let i = 0; i < els.length; i += 1) sum = (sum + (els[i].versionNonce || 0)) % 2147483647;
     return els.length + ":" + sum;
   }
-  buildUnderlayNow(api) {
-    const els = api.getSceneElements() || [];
+  buildUnderlayNow(api2) {
+    const els = api2.getSceneElements() || [];
     const b = sceneBounds2(els);
     if (!b) return null;
     const maxPx = 1500;
     const scale = Math.min(maxPx / b.width, maxPx / b.height, 1);
-    const cv = buildUnderlay(els, b, scale, api.getAppState().viewBackgroundColor || "#ffffff", this.imgCache);
+    const cv = buildUnderlay(els, b, scale, api2.getAppState().viewBackgroundColor || "#ffffff", this.imgCache);
     this._underlay = { cv, cover: b, scale, key: this.underlayKey(els) };
     return this._underlay;
   }
@@ -2438,13 +2436,13 @@ var SmoothZoom = class {
     if (this._lastCommitAt && performance.now() - this._lastCommitAt < 250) return;
     const view = this.view();
     if (!view) return;
-    const api = view.excalidrawAPI;
-    if (!api) return;
+    const api2 = view.excalidrawAPI;
+    if (!api2) return;
     const cvs = this.sceneCanvases(view);
     if (!cvs) return;
     const base = cvs.base;
     if (!base.width) return;
-    const st = api.getAppState();
+    const st = api2.getAppState();
     let c = this._snapCanvas;
     if (!c) {
       c = document.createElement("canvas");
@@ -2467,11 +2465,11 @@ var SmoothZoom = class {
     }
     this._idleSnap = { snap: c, view, zoom0: st.zoom && st.zoom.value || 1, scrollX0: st.scrollX, scrollY0: st.scrollY, at: performance.now() };
     try {
-      const els = api.getSceneElements() || [];
+      const els = api2.getSceneElements() || [];
       const key = this.underlayKey(els);
       if (!this._underlay || this._underlay.key !== key) {
-        this.ensureImages(api);
-        this.buildUnderlayNow(api);
+        this.ensureImages(api2);
+        this.buildUnderlayNow(api2);
       }
     } catch (err) {
     }
@@ -2480,8 +2478,8 @@ var SmoothZoom = class {
     if (!this.enabled) return false;
     const view = this.view();
     if (!view) return false;
-    const api = view.excalidrawAPI;
-    if (!api) return false;
+    const api2 = view.excalidrawAPI;
+    if (!api2) return false;
     if (this.session) {
       const s0 = this.session;
       if (s0.mode === "pan") return true;
@@ -2491,7 +2489,7 @@ var SmoothZoom = class {
       s0.scrollY0 = s0.scrollY;
       return true;
     }
-    return this.begin(view, api, "pan", null);
+    return this.begin(view, api2, "pan", null);
   }
   onPointerDown(ev) {
     if (!this.enabled) return;
@@ -2514,16 +2512,16 @@ var SmoothZoom = class {
     }
     const view = this.view();
     if (!view || !view.containerEl.contains(ev.target)) return;
-    const api = view.excalidrawAPI;
-    if (!api) return;
-    const tool = (api.getAppState().activeTool || {}).type;
+    const api2 = view.excalidrawAPI;
+    if (!api2) return;
+    const tool = (api2.getAppState().activeTool || {}).type;
     const pan = ev.button === 1 || this.spaceDown || tool === "hand";
     if (!pan) return;
     ev.preventDefault();
     ev.stopPropagation();
     this.dragging = { id: ev.pointerId };
     if (!this.session && !this.freezeForPan()) {
-      this.retryPan = { view, api, x0: ev.clientX, y0: ev.clientY };
+      this.retryPan = { view, api: api2, x0: ev.clientX, y0: ev.clientY };
       return;
     }
     const s = this.session;
@@ -2802,6 +2800,15 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
     this.addSettingTab(new MinimapSettingTab(this.app, this));
     this.registerEvent(this.app.workspace.on("layout-change", () => this.scheduleSync()));
     this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
+      for (const p of this.panels.values()) {
+        p._st = null;
+        p._items = null;
+        p._vw = 0;
+        p._vh = 0;
+        p._painted = false;
+        p._layerDirty = true;
+        p._followAt = performance.now();
+      }
       this.scheduleSync();
       const leaf = this.app.workspace.activeLeaf;
       const v = leaf && leaf.view;
@@ -2842,16 +2849,16 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
   /** 关掉 Excalidraw 的"显示提示"：不同版本字段名不同，凡是带 hint 的布尔值一律关掉 */
   suppressHints(view) {
     if (!view || this.settings.suppressHints === false) return;
-    const api = view.excalidrawAPI;
-    if (!api || typeof api.getAppState !== "function") return;
+    const api2 = view.excalidrawAPI;
+    if (!api2 || typeof api2.getAppState !== "function") return;
     try {
-      const st = api.getAppState();
+      const st = api2.getAppState();
       const patch = {};
       for (const k of Object.keys(st)) {
         if (/hint/i.test(k) && st[k] === true) patch[k] = false;
       }
       if (Object.keys(patch).length) {
-        api.updateScene({ appState: patch, captureUpdate: "NEVER" });
+        api2.updateScene({ appState: patch, captureUpdate: "NEVER" });
       }
     } catch (err) {
     }
@@ -3050,9 +3057,9 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
     return { width: 800, height: 600 };
   }
   panTo(view, sceneX, sceneY) {
-    const api = view && view.excalidrawAPI;
-    if (!api || typeof api.getAppState !== "function") return;
-    const st = api.getAppState();
+    const api2 = view && view.excalidrawAPI;
+    if (!api2 || typeof api2.getAppState !== "function") return;
+    const st = api2.getAppState();
     if (!st) return;
     const size = this.canvasSizeOf(view, st);
     const zoom = zoomOf(st);
@@ -3062,9 +3069,9 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
     this.queueVerify(view, scrollX, scrollY);
   }
   zoomAt(view, scenePoint, viewportX, viewportY, nextZoom) {
-    const api = view && view.excalidrawAPI;
-    if (!api || typeof api.getAppState !== "function") return;
-    const st = api.getAppState();
+    const api2 = view && view.excalidrawAPI;
+    if (!api2 || typeof api2.getAppState !== "function") return;
+    const st = api2.getAppState();
     if (!st) return;
     const next = scrollToPinScenePoint(scenePoint.x, scenePoint.y, viewportX, viewportY, nextZoom, st);
     this.applyViewport(view, next, null);
@@ -3073,20 +3080,20 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
   fitViewport() {
     const leaf = this.activeLeaf();
     const view = leaf && leaf.view;
-    const api = view && view.excalidrawAPI;
-    if (!api || typeof api.getSceneElements !== "function") return;
-    if (typeof api.scrollToContent === "function") {
-      const els = (api.getSceneElements() || []).filter((el) => el && !el.isDeleted);
-      api.scrollToContent(els, { fitToViewport: true, viewportZoomFactor: 0.9 });
+    const api2 = view && view.excalidrawAPI;
+    if (!api2 || typeof api2.getSceneElements !== "function") return;
+    if (typeof api2.scrollToContent === "function") {
+      const els = (api2.getSceneElements() || []).filter((el) => el && !el.isDeleted);
+      api2.scrollToContent(els, { fitToViewport: true, viewportZoomFactor: 0.9 });
       return;
     }
   }
   applyViewport(view, patch, anchor) {
-    const api = view && view.excalidrawAPI;
-    if (!api) return false;
-    if (this.panMethod === "setViewport" && anchor && typeof api.setViewport === "function" && !Number.isFinite(patch.zoom)) {
+    const api2 = view && view.excalidrawAPI;
+    if (!api2) return false;
+    if (this.panMethod === "setViewport" && anchor && typeof api2.setViewport === "function" && !Number.isFinite(patch.zoom)) {
       try {
-        api.setViewport({ target: { x: anchor.x, y: anchor.y, width: 0, height: 0 }, fit: "none" });
+        api2.setViewport({ target: { x: anchor.x, y: anchor.y, width: 0, height: 0 }, fit: "none" });
         return true;
       } catch (err) {
         console.warn("[excalidraw-minimap] setViewport \u5931\u8D25\uFF0C\u9000\u56DE updateScene", err);
@@ -3098,7 +3105,7 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
     if (Number.isFinite(patch.scrollY)) appState.scrollY = patch.scrollY;
     if (Number.isFinite(patch.zoom)) appState.zoom = { value: clamp(patch.zoom, 0.1, 30) };
     try {
-      api.updateScene({ appState, captureUpdate: "NEVER" });
+      api2.updateScene({ appState, captureUpdate: "NEVER" });
       return true;
     } catch (err) {
       console.error("[excalidraw-minimap] updateScene \u5931\u8D25", err);
@@ -3117,12 +3124,12 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
     const check = this._verify;
     if (!check || check.confirmed) return;
     if (Date.now() - check.at < 500) return;
-    const api = check.view && check.view.excalidrawAPI;
-    if (!api || typeof api.getAppState !== "function") {
+    const api2 = check.view && check.view.excalidrawAPI;
+    if (!api2 || typeof api2.getAppState !== "function") {
       this._verify = null;
       return;
     }
-    const st = api.getAppState();
+    const st = api2.getAppState();
     if (!st) {
       this._verify = null;
       return;
@@ -3130,7 +3137,7 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
     const dx = Math.abs(st.scrollX - check.expectedX);
     const dy = Math.abs(st.scrollY - check.expectedY);
     if (dx > 2 || dy > 2) {
-      if (typeof api.setViewport === "function") {
+      if (typeof api2.setViewport === "function") {
         console.info("[excalidraw-minimap] updateScene \u672A\u6539\u53D8\u89C6\u53E3\uFF0C\u6539\u7528 setViewport");
         this.panMethod = "setViewport";
       }

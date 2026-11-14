@@ -69,6 +69,16 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
 
     this.registerEvent(this.app.workspace.on("layout-change", () => this.scheduleSync()));
     this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
+      // 切文件/标签：面板里的元素缓存与位图都要重来，否则小地图停在上一张图
+      for (const p of this.panels.values()) {
+        p._st = null;
+        p._items = null;
+        p._vw = 0;
+        p._vh = 0;
+        p._painted = false;
+        p._layerDirty = true;
+        p._followAt = performance.now();
+      }
       this.scheduleSync();
       const leaf = this.app.workspace.activeLeaf;
       const v = leaf && leaf.view;

@@ -68,7 +68,7 @@ export class MinimapSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("缩放锚定中心 + 全局滚动缩放")
-      .setDesc("开启：缩放始终围绕画布中心；且光标不在画布上（标签栏、侧边栏）时滚轮也能缩放。建议使用数位板时开启，否则切换标签页后容易出现缩放失灵。关闭则恢复鼠标原生行为（锚点跟随光标、画布外滚轮无效）。")
+      .setDesc("使用数位板时强烈建议开启，否则切换标签页后容易出现缩放失灵。开启后：缩放始终围绕画布中心；光标不在画布上（标签栏、侧边栏）时滚轮也能缩放。关闭则恢复鼠标原生行为。")
       .addToggle((t) =>
         t.setValue(s.centerAnchor !== false).onChange(async (v) => {
           s.centerAnchor = v;
