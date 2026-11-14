@@ -1854,7 +1854,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u5B9A\u4E2D\u5FC3 + \u5168\u5C40\u6EDA\u52A8\u7F29\u653E").setDesc("\u5F00\u542F\u540E\u7F29\u653E\u59CB\u7EC8\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\u3002TourBox \u8FD9\u7C7B\u6EDA\u8F6E\u8BBE\u5907\u5EFA\u8BAE\u5728\u9A71\u52A8\u91CC\u628A\u5B83\u6620\u5C04\u6210\u7EAF\u952E\u76D8\u6309\u952E\uFF08Ctrl+= \u653E\u5927\u3001Ctrl+- \u7F29\u5C0F\u3001Ctrl+0 \u590D\u4F4D\uFF09\uFF0C\u56E0\u4E3A\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\u65F6\u6EDA\u8F6E\u4E8B\u4EF6\u4E0D\u4F1A\u4F20\u7ED9\u753B\u5E03\uFF0C\u4EFB\u4F55\u63D2\u4EF6\u90FD\u63A5\u4E0D\u5230\u3002").addToggle(
+    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u70B9\u56FA\u5B9A\u5728\u753B\u5E03\u4E2D\u5FC3").setDesc("\u5F00\u542F\u540E\u7F29\u653E\u59CB\u7EC8\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\uFF1B\u5173\u95ED\u5219\u8DDF\u968F\u5149\u6807\u3002TourBox \u8FD9\u7C7B\u6EDA\u8F6E\u8BBE\u5907\u5EFA\u8BAE\u5728\u9A71\u52A8\u91CC\u628A\u65CB\u94AE\u6620\u5C04\u6210\u7EAF\u952E\u76D8\u6309\u952E\uFF08Ctrl+= \u653E\u5927\u3001Ctrl+- \u7F29\u5C0F\u3001Ctrl+0 \u590D\u4F4D\uFF09\uFF1A\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\u65F6\u6EDA\u8F6E\u4E8B\u4EF6\u4E0D\u4F1A\u4F20\u7ED9\u753B\u5E03\uFF0C\u63D2\u4EF6\u63A5\u4E0D\u5230\u3002").addToggle(
       (t) => t.setValue(this.plugin.settings.centerAnchor !== false).onChange(async (v) => {
         this.plugin.settings.centerAnchor = v;
         await this.plugin.saveSettingsAndSync();
@@ -1892,6 +1892,22 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
     hint.className = "setting-item-description";
     hint.textContent = "\u4F4D\u7F6E\u3001\u5927\u5C0F\u3001\u5730\u56FE\u6BD4\u4F8B\u4E0D\u5728\u8FD9\u91CC\u8C03\uFF1A\u76F4\u63A5\u62D6\u9762\u677F\u9876\u90E8\u7684\u4E09\u9897\u70B9\u79FB\u52A8\u3001\u62D6\u53F3\u4E0B\u89D2\u659C\u7EB9\u6539\u5927\u5C0F\u3001\u6EDA\u8F6E\u6216\u7528\u5E95\u90E8\u6A2A\u6761\u6539\u6BD4\u4F8B\u3002";
     adv.appendChild(hint);
+    containerEl.createEl("h3", { text: "\u9AD8\u7EA7" });
+    new import_obsidian.Setting(containerEl).setName("\u5C0F\u5730\u56FE\u5237\u65B0\u95F4\u9694").setDesc("\u591A\u4E45\u91CD\u65B0\u91C7\u6837\u4E00\u6B21\u4E3B\u753B\u5E03\u72B6\u6001\u3002\u6570\u503C\u8D8A\u5927\u8D8A\u7701 CPU\uFF0C\u4F46\u84DD\u6846\u4E0E\u5C0F\u5730\u56FE\u8DDF\u624B\u4F1A\u53D8\u8FDF\u949D\uFF1B\u8D8A\u5C0F\u8D8A\u8DDF\u624B\u3001\u5F00\u9500\u8D8A\u9AD8\u3002\u62D6\u52A8\u4E3B\u753B\u5E03\u65F6\u4F1A\u81EA\u52A8\u63D0\u901F\u5230 60 \u6BEB\u79D2\u3002").addSlider(
+      (sl) => sl.setLimits(60, 600, 10).setValue(Number(s.tickMs) || 250).setDynamicTooltip().onChange(async (v) => {
+        s.tickMs = v;
+        await this.plugin.saveSettingsAndSync();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("\u91CD\u7F6E\u6240\u6709\u8BBE\u7F6E").setDesc("\u628A\u672C\u63D2\u4EF6\u7684\u5168\u90E8\u8BBE\u7F6E\u6062\u590D\u4E3A\u9ED8\u8BA4\u503C\uFF08\u542B\u9762\u677F\u4F4D\u7F6E\u3001\u5C3A\u5BF8\u3001\u7F29\u653E\u6BD4\u4F8B\uFF09\u3002").addButton(
+      (b) => b.setButtonText("\u5168\u90E8\u91CD\u7F6E").setWarning().onClick(async () => {
+        Object.assign(this.plugin.settings, DEFAULT_SETTINGS);
+        await this.plugin.saveSettingsAndSync();
+        this.plugin.sync();
+        this.display();
+        new import_obsidian.Notice("\u5DF2\u6062\u590D\u9ED8\u8BA4\u8BBE\u7F6E");
+      })
+    );
     new import_obsidian.Setting(containerEl).setName("\u68C0\u6D4B\u66F4\u65B0").setDesc("\u4ECE GitHub \u68C0\u67E5\u662F\u5426\u6709\u65B0\u7248\u672C\uFF08\u5F53\u524D v" + this.plugin.manifest.version + "\uFF09").addButton(
       (b) => b.setButtonText("\u68C0\u6D4B").onClick(async () => {
         const cur = this.plugin.manifest.version;

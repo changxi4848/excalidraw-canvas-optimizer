@@ -68,8 +68,8 @@ export class MinimapSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("缩放锚定中心 + 全局滚动缩放")
-      .setDesc("开启后缩放始终围绕画布中心。TourBox 这类滚轮设备建议在驱动里把它映射成纯键盘按键（Ctrl+= 放大、Ctrl+- 缩小、Ctrl+0 复位），因为光标不在画布上时滚轮事件不会传给画布，任何插件都接不到。")
+      .setName("缩放锚点固定在画布中心")
+      .setDesc("开启后缩放始终围绕画布中心；关闭则跟随光标。TourBox 这类滚轮设备建议在驱动里把旋钮映射成纯键盘按键（Ctrl+= 放大、Ctrl+- 缩小、Ctrl+0 复位）：光标不在画布上时滚轮事件不会传给画布，插件接不到。")
       .addToggle((t) =>
         t.setValue(this.plugin.settings.centerAnchor !== false).onChange(async (v) => {
           this.plugin.settings.centerAnchor = v;
@@ -128,6 +128,35 @@ export class MinimapSettingTab extends PluginSettingTab {
     hint.textContent =
       "位置、大小、地图比例不在这里调：直接拖面板顶部的三颗点移动、拖右下角斜纹改大小、滚轮或用底部横条改比例。";
     adv.appendChild(hint);
+
+    containerEl.createEl("h3", { text: "高级" });
+
+    new Setting(containerEl)
+      .setName("小地图刷新间隔")
+      .setDesc("多久重新采样一次主画布状态。数值越大越省 CPU，但蓝框与小地图跟手会变迟钝；越小越跟手、开销越高。拖动主画布时会自动提速到 60 毫秒。")
+      .addSlider((sl) =>
+        sl
+          .setLimits(60, 600, 10)
+          .setValue(Number(s.tickMs) || 250)
+          .setDynamicTooltip()
+          .onChange(async (v) => {
+            s.tickMs = v;
+            await this.plugin.saveSettingsAndSync();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("重置所有设置")
+      .setDesc("把本插件的全部设置恢复为默认值（含面板位置、尺寸、缩放比例）。")
+      .addButton((b) =>
+        b.setButtonText("全部重置").setWarning().onClick(async () => {
+          Object.assign(this.plugin.settings, DEFAULT_SETTINGS);
+          await this.plugin.saveSettingsAndSync();
+          this.plugin.sync();
+          this.display();
+          new Notice("已恢复默认设置");
+        })
+      );
 
     new Setting(containerEl)
       .setName("检测更新")
