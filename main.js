@@ -2,6 +2,7 @@ var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -15,6 +16,7 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
 // src/main.js
 var main_exports = {};
@@ -1821,8 +1823,9 @@ var DEFAULT_SETTINGS = {
   mapScale: 0.11,
   standardX: 0,
   standardY: 0,
-  /* 缩放锚点 */
+  /* 交互模式 */
   centerAnchor: true,
+  inputMode: "mouse",
   /* 顺滑缩放 */
   smoothEnabled: true,
   smoothSettleMs: 120,
@@ -1838,7 +1841,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
     const s = this.plugin.settings;
     containerEl.replaceChildren();
     const title = document.createElement("h2");
-    title.textContent = "Excali Canvas Optimizer\uFF08\u753B\u5E03\u4F18\u5316\uFF09";
+    title.textContent = "Excali \u753B\u5E03\u4F18\u5316";
     containerEl.appendChild(title);
     const intro = document.createElement("p");
     intro.className = "setting-item-description";
@@ -1852,8 +1855,8 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
       })
     );
     new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u5B9A\u4E2D\u5FC3 + \u5168\u5C40\u6EDA\u52A8\u7F29\u653E").setDesc("\u4F7F\u7528\u6570\u4F4D\u677F\u65F6\u5F3A\u70C8\u5EFA\u8BAE\u5F00\u542F\uFF0C\u5426\u5219\u5207\u6362\u6807\u7B7E\u9875\u540E\u5BB9\u6613\u51FA\u73B0\u7F29\u653E\u5931\u7075\u3002\u5F00\u542F\u540E\uFF1A\u7F29\u653E\u59CB\u7EC8\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\uFF1B\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\uFF08\u6807\u7B7E\u680F\u3001\u4FA7\u8FB9\u680F\uFF09\u65F6\u6EDA\u8F6E\u4E5F\u80FD\u7F29\u653E\u3002\u5173\u95ED\u5219\u6062\u590D\u9F20\u6807\u539F\u751F\u884C\u4E3A\u3002").addToggle(
-      (t) => t.setValue(s.centerAnchor !== false).onChange(async (v) => {
-        s.centerAnchor = v;
+      (t) => t.setValue(this.plugin.settings.centerAnchor !== false).onChange(async (v) => {
+        this.plugin.settings.centerAnchor = v;
         await this.plugin.saveSettingsAndSync();
       })
     );
@@ -1985,7 +1988,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
       })
     );
     const aboutLines = [
-      "Excali Canvas Optimizer\uFF08Excali \u753B\u5E03\u4F18\u5316\uFF09  v1.0.1",
+      "Excali \u753B\u5E03\u4F18\u5316  v1.0.1",
       "\u4F5C\u8005\uFF1A\u5362\u957F\u5E0C  https://github.com/changxi4848",
       "\u8BE5\u63D2\u4EF6\u662F Excalidraw \u7684\u7B2C\u4E09\u65B9\u8F85\u52A9\u4F18\u5316\u63D2\u4EF6\uFF0C\u4E2A\u4EBA\u5F00\u53D1\u3001\u968F\u7F18\u7EF4\u62A4\uFF0C\u4EC5\u652F\u6301 Windows \u7AEF\u3002",
       "",
@@ -2019,9 +2022,6 @@ var SmoothZoom = class {
     this.settings = plugin.settings;
   }
   start() {
-    this.plugin.registerDomEvent(window, "pointermove", (ev) => {
-      if (ev.pointerType === "pen") this._penAt = performance.now();
-    }, { capture: true, passive: true });
     this._idleSnap = null;
     this._underlay = null;
     this._idleTimer = setInterval(() => this.captureIdle(), 500);
@@ -2074,22 +2074,10 @@ var SmoothZoom = class {
     this.commit(true);
   }
   view() {
-    const ws = this.app.workspace;
-    const pick = (leaf) => {
-      const v = leaf && leaf.view;
-      return v && v.getViewType && v.getViewType() === "excalidraw" ? v : null;
-    };
-    const direct = pick(ws.activeLeaf) || pick(ws.getMostRecentLeaf ? ws.getMostRecentLeaf() : null);
-    if (direct) return direct;
-    try {
-      const leaves = ws.getLeavesOfType("excalidraw") || [];
-      for (const leaf of leaves) {
-        const v = pick(leaf);
-        if (v && v.containerEl && v.containerEl.isConnected && v.containerEl.clientWidth > 80) return v;
-      }
-    } catch (err) {
-    }
-    return null;
+    const leaf = this.app.workspace.getMostRecentLeaf ? this.app.workspace.getMostRecentLeaf() : this.app.workspace.activeLeaf;
+    const v = leaf && leaf.view;
+    if (!v || !v.getViewType || v.getViewType() !== "excalidraw") return null;
+    return v;
   }
   /** 场景画布：静态层 + 交互层 */
   sceneCanvases(view) {
@@ -2159,7 +2147,6 @@ var SmoothZoom = class {
       elementCount: (st.__els || api.getSceneElements() || []).length,
       scrollX: baseScrollX,
       scrollY: baseScrollY,
-      // 笔模式的滚轮事件来自笔尖，和回中后的鼠标光标不是一回事，统一锚在画布中心
       ax: ev && this._anchorCenter === false ? ev.clientX - rect.left : rect.width / 2,
       ay: ev && this._anchorCenter === false ? ev.clientY - rect.top : rect.height / 2,
       startClientX: ev ? ev.clientX : 0,
@@ -2338,13 +2325,13 @@ var SmoothZoom = class {
     if (ev.target && ev.target.closest && ev.target.closest(".emm-panel")) return;
     const view = this.view();
     if (!view) return;
-    const inView = view.containerEl.contains(ev.target);
     const api = view.excalidrawAPI;
     if (!api) return;
+    const inView = view.containerEl.contains(ev.target);
     const centerMode = this.settings.centerAnchor !== false;
     if (!inView && !centerMode) return;
     this._anchorCenter = centerMode;
-    const zoomGesture = centerMode && !inView ? true : ev.ctrlKey || ev.metaKey;
+    const zoomGesture = centerMode ? true : ev.ctrlKey || ev.metaKey;
     if (!this.session && !this.begin(view, api, zoomGesture ? "zoom" : "pan", ev)) return;
     const s = this.session;
     if (!s) return;
@@ -2756,6 +2743,17 @@ function buildUnderlay(els, cover, scale, paper, images) {
   return cv;
 }
 
+// stub:focus-stub
+var FocusHelper = class {
+  constructor() {
+    __publicField(this, "helperProc", null);
+  }
+  async start() {
+  }
+  async stop() {
+  }
+};
+
 // src/main.js
 var EXCALIDRAW_VIEW = "excalidraw";
 var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
@@ -2781,6 +2779,15 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
     this._failures = /* @__PURE__ */ new Map();
     this._moduleErrors = {};
     this.smooth = new SmoothZoom(this);
+    this.focus = new FocusHelper(this);
+    if (this.settings.inputMode === "pen") {
+      try {
+        await this.focus.start();
+      } catch (err) {
+        this._moduleErrors.focus = String(err && (err.message || err));
+        console.warn("[optimizer] \u7B14\u6A21\u5F0F\u52A9\u624B\u542F\u7528\u5931\u8D25", err);
+      }
+    }
     this.smooth.enabled = this.settings.smoothEnabled !== false;
     try {
       this.smooth.start();
@@ -2835,6 +2842,12 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
       this._pendingTimer = null;
     }
     this.pending.clear();
+    if (this.focus) {
+      try {
+        this.focus.stop();
+      } catch (err) {
+      }
+    }
     if (this.smooth) this.smooth.stop();
     for (const panel of this.panels.values()) panel.unmount();
     this.panels.clear();
@@ -2865,17 +2878,41 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
     } catch (err) {
     }
   }
-  /** 保存设置并立即生效：所有设置项都走这里 */
+  async setInputMode(mode) {
+    this.settings.inputMode = mode;
+    await this.saveData(this.settings);
+    this.safe("navigator", () => this.sync());
+    try {
+      if (mode === "pen") await this.focus.start();
+      else this.focus.stop();
+    } catch (err) {
+      console.warn("[optimizer] focus toggle failed", err);
+    }
+  }
+  async setMapScale(scale) {
+    this.settings.mapScale = scale;
+    await this.saveData(this.settings);
+    for (const panel of this.panels.values()) panel.applyMapScale(scale);
+  }
   async saveSettingsAndSync() {
-    try {
-      await this.saveData(this.settings);
-    } catch (err) {
+    if (this._saveTimer) {
+      window.clearTimeout(this._saveTimer);
+      this._saveTimer = null;
     }
-    try {
-      this.sync();
-    } catch (err) {
+    await this.saveData(this.settings);
+    for (const panel of this.panels.values()) {
+      panel.applyLayout();
+      panel.invalidate();
     }
-    this.scheduleTick();
+    this.safe("tick", () => this.tickAll());
+  }
+  /* --------------------------------------------------------- 面板生命周期 */
+  scheduleSync() {
+    if (this._syncTimer) window.clearTimeout(this._syncTimer);
+    this._syncTimer = window.setTimeout(() => {
+      this._syncTimer = null;
+      this.safe("navigator", () => this.sync());
+    }, 120);
   }
   shouldShow(leaf) {
     const state = this.leafState.get(leaf);
@@ -3023,6 +3060,7 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
     }, delay);
   }
   tickAll() {
+    if (this.settings.navigatorEnabled === false) return;
     try {
       const leaf = this.app.workspace.activeLeaf;
       const v = leaf && leaf.view;

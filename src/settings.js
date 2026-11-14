@@ -23,8 +23,9 @@ export const DEFAULT_SETTINGS = {
   standardX: 0,
   standardY: 0,
 
-  /* 缩放锚点 */
+  /* 交互模式 */
   centerAnchor: true,
+  inputMode: "mouse",
 
   /* 顺滑缩放 */
   smoothEnabled: true,
@@ -44,7 +45,7 @@ export class MinimapSettingTab extends PluginSettingTab {
     containerEl.replaceChildren();
 
     const title = document.createElement("h2");
-    title.textContent = "Excali Canvas Optimizer（画布优化）";
+    title.textContent = "Excali 画布优化";
     containerEl.appendChild(title);
 
     const intro = document.createElement("p");
@@ -70,8 +71,8 @@ export class MinimapSettingTab extends PluginSettingTab {
       .setName("缩放锚定中心 + 全局滚动缩放")
       .setDesc("使用数位板时强烈建议开启，否则切换标签页后容易出现缩放失灵。开启后：缩放始终围绕画布中心；光标不在画布上（标签栏、侧边栏）时滚轮也能缩放。关闭则恢复鼠标原生行为。")
       .addToggle((t) =>
-        t.setValue(s.centerAnchor !== false).onChange(async (v) => {
-          s.centerAnchor = v;
+        t.setValue(this.plugin.settings.centerAnchor !== false).onChange(async (v) => {
+          this.plugin.settings.centerAnchor = v;
           await this.plugin.saveSettingsAndSync();
         })
       );
@@ -275,7 +276,7 @@ export class MinimapSettingTab extends PluginSettingTab {
       );
 
     const aboutLines = [
-      "Excali Canvas Optimizer（Excali 画布优化）  v1.0.1",
+      "Excali 画布优化  v1.0.1",
       "作者：卢长希  https://github.com/changxi4848",
       "该插件是 Excalidraw 的第三方辅助优化插件，个人开发、随缘维护，仅支持 Windows 端。",
       "",

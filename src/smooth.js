@@ -23,9 +23,6 @@ export class SmoothZoom {
   }
 
   start() {
-    this.plugin.registerDomEvent(window, "pointermove", (ev) => {
-      if (ev.pointerType === "pen") this._penAt = performance.now();
-    }, { capture: true, passive: true });
     // 空闲时每 400ms 备份一帧，手势一来就能直接复用，不用现场抓帧
     this._idleSnap = null;
     this._underlay = null;
@@ -83,22 +80,12 @@ export class SmoothZoom {
   }
 
   view() {
-    const ws = this.app.workspace;
-    const pick = (leaf) => {
-      const v = leaf && leaf.view;
-      return v && v.getViewType && v.getViewType() === "excalidraw" ? v : null;
-    };
-    const direct = pick(ws.activeLeaf) || pick(ws.getMostRecentLeaf ? ws.getMostRecentLeaf() : null);
-    if (direct) return direct;
-    // 光标在侧边栏/标签栏时，最近叶子可能是别的视图；退回到任意可见的 Excalidraw
-    try {
-      const leaves = ws.getLeavesOfType("excalidraw") || [];
-      for (const leaf of leaves) {
-        const v = pick(leaf);
-        if (v && v.containerEl && v.containerEl.isConnected && v.containerEl.clientWidth > 80) return v;
-      }
-    } catch (err) { /* ignore */ }
-    return null;
+    const leaf = this.app.workspace.getMostRecentLeaf
+      ? this.app.workspace.getMostRecentLeaf()
+      : this.app.workspace.activeLeaf;
+    const v = leaf && leaf.view;
+    if (!v || !v.getViewType || v.getViewType() !== "excalidraw") return null;
+    return v;
   }
 
   /** 场景画布：静态层 + 交互层 */
@@ -175,7 +162,6 @@ export class SmoothZoom {
       elementCount: (st.__els || api.getSceneElements() || []).length,
       scrollX: baseScrollX,
       scrollY: baseScrollY,
-      // 笔模式的滚轮事件来自笔尖，和回中后的鼠标光标不是一回事，统一锚在画布中心
       ax: (ev && this._anchorCenter === false) ? ev.clientX - rect.left : rect.width / 2,
       ay: (ev && this._anchorCenter === false) ? ev.clientY - rect.top : rect.height / 2,
       startClientX: ev ? ev.clientX : 0,
@@ -352,15 +338,16 @@ export class SmoothZoom {
     if (ev.target && ev.target.closest && ev.target.closest(".emm-panel")) return; // 导航窗自己处理
     const view = this.view();
     if (!view) return;
-    const inView = view.containerEl.contains(ev.target);
     const api = view.excalidrawAPI;
     if (!api) return;
+    const inView = view.containerEl.contains(ev.target);
     const centerMode = this.settings.centerAnchor !== false;
-    // 关闭（鼠标原生）：画布外不处理，锚点跟随光标
+    // 关闭：鼠标原生行为（画布外不响应）
     if (!inView && !centerMode) return;
-    // 开启：锚点锁定画布中心；画布外的滚轮也直接当缩放
+    // 开启：锚点锁画布中心；画布外任何滚轮都当缩放
     this._anchorCenter = centerMode;
-    const zoomGesture = (centerMode && !inView) ? true : (ev.ctrlKey || ev.metaKey);
+    // 开启"锚定中心"后：任何位置的滚轮都当作缩放（笔/TourBox 常丢 Ctrl 修饰键）
+    const zoomGesture = centerMode ? true : (ev.ctrlKey || ev.metaKey);
     if (!this.session && !this.begin(view, api, zoomGesture ? "zoom" : "pan", ev)) return;
     const s = this.session;
     if (!s) return;

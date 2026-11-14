@@ -12,6 +12,7 @@ import { clamp, scrollToPinScenePoint, viewportSizeOf, zoomOf } from "./geometry
 import { MinimapPanel } from "./panel.js";
 import { DEFAULT_SETTINGS, MinimapSettingTab } from "./settings.js";
 import { SmoothZoom } from "./smooth.js";
+import { FocusHelper } from "./focus.js";
 
 const EXCALIDRAW_VIEW = "excalidraw";
 
@@ -43,6 +44,10 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
     this._moduleErrors = {};
 
     this.smooth = new SmoothZoom(this);
+    this.focus = new FocusHelper(this);
+    if (this.settings.inputMode === "pen") {
+      try { await this.focus.start(); } catch (err) { this._moduleErrors.focus = String(err && (err.message || err)); console.warn("[optimizer] 笔模式助手启用失败", err); }
+    }
     this.smooth.enabled = this.settings.smoothEnabled !== false;
     try {
       this.smooth.start();
@@ -69,7 +74,6 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
 
     this.registerEvent(this.app.workspace.on("layout-change", () => this.scheduleSync()));
     this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
-      // 切文件/标签：面板里的元素缓存与位图都要重来，否则小地图停在上一张图
       for (const p of this.panels.values()) {
         p._st = null;
         p._items = null;
@@ -103,6 +107,7 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
   onunload() {
     if (this._pendingTimer) { clearInterval(this._pendingTimer); this._pendingTimer = null; }
     this.pending.clear();
+    if (this.focus) { try { this.focus.stop(); } catch (err) { /* ignore */ } }
     if (this.smooth) this.smooth.stop();
     for (const panel of this.panels.values()) panel.unmount();
     this.panels.clear();
@@ -138,11 +143,46 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
     }
   }
 
-  /** 保存设置并立即生效：所有设置项都走这里 */
+  async setInputMode(mode) {
+    this.settings.inputMode = mode;
+    await this.saveData(this.settings);
+    // 设置变化后立刻重新挂载/卸载面板（否则关掉导航器不会马上消失）
+    this.safe("navigator", () => this.sync());
+    try {
+      if (mode === "pen") await this.focus.start();
+      else this.focus.stop();
+    } catch (err) {
+      console.warn("[optimizer] focus toggle failed", err);
+    }
+  }
+
+  async setMapScale(scale) {
+    this.settings.mapScale = scale;
+    await this.saveData(this.settings);
+    for (const panel of this.panels.values()) panel.applyMapScale(scale);
+  }
+
   async saveSettingsAndSync() {
-    try { await this.saveData(this.settings); } catch (err) { /* ignore */ }
-    try { this.sync(); } catch (err) { /* ignore */ }
-    this.scheduleTick();
+    if (this._saveTimer) {
+      window.clearTimeout(this._saveTimer);
+      this._saveTimer = null;
+    }
+    await this.saveData(this.settings);
+    for (const panel of this.panels.values()) {
+      panel.applyLayout();
+      panel.invalidate();
+    }
+    this.safe("tick", () => this.tickAll());
+  }
+
+  /* --------------------------------------------------------- 面板生命周期 */
+
+  scheduleSync() {
+    if (this._syncTimer) window.clearTimeout(this._syncTimer);
+    this._syncTimer = window.setTimeout(() => {
+      this._syncTimer = null;
+      this.safe("navigator", () => this.sync());
+    }, 120);
   }
 
   shouldShow(leaf) {
@@ -313,6 +353,7 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
   }
 
   tickAll() {
+    if (this.settings.navigatorEnabled === false) return;
     // 兜底收敛：活动画布没有面板（或面板被重建掉了）就补挂，最多每 250ms 检查一次
     try {
       const leaf = this.app.workspace.activeLeaf;

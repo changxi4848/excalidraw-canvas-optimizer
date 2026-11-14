@@ -51,8 +51,7 @@ export class FocusHelper {
       this.app.workspace.on("active-leaf-change", () => {
         this.scheduleRestore("leaf-change");
         if (this.settings.enableWheelWake) {
-          if (this._wakeTimer) window.clearTimeout(this._wakeTimer);
-      this._wakeTimer = window.setTimeout(() => this.wakeWheel(), 260);
+          [0, 150, 400].forEach((ms) => window.setTimeout(() => this.wakeWheel(), ms));
         }
       })
     );
@@ -62,8 +61,7 @@ export class FocusHelper {
     this.plugin.registerDomEvent(window, "focus", () => {
       this.scheduleRestore("win-focus");
       if (this.settings.enableWheelWake) {
-        if (this._wakeTimer) window.clearTimeout(this._wakeTimer);
-      this._wakeTimer = window.setTimeout(() => this.wakeWheel(), 260);
+        [0, 150].forEach((ms) => window.setTimeout(() => this.wakeWheel(), ms));
       }
     });
 
