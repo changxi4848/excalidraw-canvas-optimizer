@@ -162,8 +162,8 @@ export class SmoothZoom {
       elementCount: (st.__els || api.getSceneElements() || []).length,
       scrollX: baseScrollX,
       scrollY: baseScrollY,
-      ax: (ev && this._anchorCenter === false) ? ev.clientX - rect.left : rect.width / 2,
-      ay: (ev && this._anchorCenter === false) ? ev.clientY - rect.top : rect.height / 2,
+      ax: (this._anchorPx && this._anchorCenter === false) ? this._anchorPx.x : rect.width / 2,
+      ay: (this._anchorPx && this._anchorCenter === false) ? this._anchorPx.y : rect.height / 2,
       startClientX: ev ? ev.clientX : 0,
       startClientY: ev ? ev.clientY : 0,
     };
@@ -333,21 +333,44 @@ export class SmoothZoom {
 
   /* ------------------------------------------------------------ 交互 */
 
+  trackPointer() {
+    if (this._ptrBound) return;
+    this._ptrBound = true;
+    this._lastPointer = "mouse";
+    const onMove = (e) => {
+      if (e.pointerType === "pen") {
+        this._lastPointer = "pen";
+        this._penX = e.clientX;
+        this._penY = e.clientY;
+      } else if (e.pointerType === "mouse") {
+        this._lastPointer = "mouse";
+      }
+    };
+    this.plugin.registerDomEvent(window, "pointermove", onMove, { capture: true, passive: true });
+    this.plugin.registerDomEvent(window, "pointerdown", onMove, { capture: true, passive: true });
+  }
+
   onWheel(ev) {
+    this.trackPointer();
     if (!this.enabled) return;
     if (ev.target && ev.target.closest && ev.target.closest(".emm-panel")) return; // 导航窗自己处理
     const view = this.view();
     if (!view) return;
     const api = view.excalidrawAPI;
     if (!api) return;
-    const inView = view.containerEl.contains(ev.target);
+    const box = view.containerEl.getBoundingClientRect();
+    const penMode = this._lastPointer === "pen" && this._penX != null;
+    const px = penMode ? this._penX : ev.clientX;
+    const py = penMode ? this._penY : ev.clientY;
+    const inView = px >= box.left && px <= box.right && py >= box.top && py <= box.bottom;
+    this._anchorPx = { x: px - box.left, y: py - box.top };
     const centerMode = this.settings.centerAnchor !== false;
     // 关闭：鼠标原生行为（画布外不响应）
-    if (!inView && !centerMode) return;
+    if (!inView && !(penMode && centerMode)) return;
     // 开启：锚点锁画布中心；画布外任何滚轮都当缩放
-    this._anchorCenter = centerMode;
+    this._anchorCenter = penMode ? centerMode : false;
     // 开启"锚定中心"后：任何位置的滚轮都当作缩放（笔/TourBox 常丢 Ctrl 修饰键）
-    const zoomGesture = centerMode ? true : (ev.ctrlKey || ev.metaKey);
+    const zoomGesture = penMode ? true : (ev.ctrlKey || ev.metaKey);
     if (!this.session && !this.begin(view, api, zoomGesture ? "zoom" : "pan", ev)) return;
     const s = this.session;
     if (!s) return;
