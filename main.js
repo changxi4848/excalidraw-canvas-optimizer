@@ -1825,7 +1825,6 @@ var DEFAULT_SETTINGS = {
   standardY: 0,
   /* 缩放锚点 */
   centerAnchor: true,
-  wheelGlobal: true,
   /* 顺滑缩放 */
   smoothEnabled: true,
   smoothSettleMs: 120,
@@ -1854,7 +1853,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u70B9\u56FA\u5B9A\u5728\u753B\u5E03\u4E2D\u5FC3").setDesc("\u5F00\u542F\uFF1A\u65E0\u8BBA\u6EDA\u8F6E\u6765\u81EA\u9F20\u6807\u3001\u89E6\u6478\u677F\u8FD8\u662F\u6570\u4F4D\u677F\uFF0C\u90FD\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\u7F29\u653E\u3002\u5173\u95ED\uFF1A\u56F4\u7ED5\u5F53\u524D\u5149\u6807\u4F4D\u7F6E\u7F29\u653E\u3002").addToggle(
+    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u70B9\u56FA\u5B9A\u5728\u753B\u5E03\u4E2D\u5FC3").setDesc("\u5F00\u542F\uFF1A\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\u7F29\u653E\u3002\u5173\u95ED\uFF1A\u56F4\u7ED5\u5F53\u524D\u5149\u6807\u4F4D\u7F6E\u7F29\u653E\u3002\u5EFA\u8BAE\u6570\u4F4D\u677F\u5F00\u542F\uFF0C\u5426\u5219\u7F29\u653E\u951A\u70B9\u4EC5\u8DDF\u968F\u9F20\u6807\u5149\u6807\u6700\u540E\u4F4D\u7F6E\u3002").addToggle(
       (t) => t.setValue(s.centerAnchor !== false).onChange(async (v) => {
         s.centerAnchor = v;
         await this.plugin.saveSettingsAndSync();
@@ -1892,12 +1891,6 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
     hint.className = "setting-item-description";
     hint.textContent = "\u4F4D\u7F6E\u3001\u5927\u5C0F\u3001\u5730\u56FE\u6BD4\u4F8B\u4E0D\u5728\u8FD9\u91CC\u8C03\uFF1A\u76F4\u63A5\u62D6\u9762\u677F\u9876\u90E8\u7684\u4E09\u9897\u70B9\u79FB\u52A8\u3001\u62D6\u53F3\u4E0B\u89D2\u659C\u7EB9\u6539\u5927\u5C0F\u3001\u6EDA\u8F6E\u6216\u7528\u5E95\u90E8\u6A2A\u6761\u6539\u6BD4\u4F8B\u3002";
     adv.appendChild(hint);
-    new import_obsidian.Setting(adv).setName("\u6EDA\u8F6E\u5168\u5C40\u751F\u6548").setDesc("\u5F00\u542F\uFF1A\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\uFF08\u4F8B\u5982\u505C\u5728\u4FA7\u8FB9\u680F\uFF09\u65F6\u6EDA\u8F6E\u4E5F\u7F29\u653E\u753B\u5E03\uFF0C\u9002\u5408 TourBox/\u6570\u4F4D\u677F\u3002\u5173\u95ED\uFF1A\u53EA\u6709\u5149\u6807\u5728\u753B\u5E03\u4E0A\u624D\u54CD\u5E94\u3002").addToggle(
-      (t) => t.setValue(s.wheelGlobal !== false).onChange(async (v) => {
-        s.wheelGlobal = v;
-        await this.plugin.saveSettingsAndSync();
-      })
-    );
     new import_obsidian.Setting(adv).setName("\u81EA\u52A8\u663E\u793A\u5C0F\u5730\u56FE").setDesc("\u6253\u5F00 Excalidraw \u753B\u5E03\u65F6\u81EA\u52A8\u51FA\u73B0\uFF1B\u5173\u6389\u540E\u9700\u624B\u52A8\u5524\u51FA\u3002").addToggle(
       (t) => t.setValue(s.autoShow).onChange(async (v) => {
         s.autoShow = v;
@@ -2332,8 +2325,7 @@ var SmoothZoom = class {
     if (ev.target && ev.target.closest && ev.target.closest(".emm-panel")) return;
     const view = this.view();
     if (!view) return;
-    const inView = view.containerEl.contains(ev.target);
-    if (!inView && this.settings.wheelGlobal === false) return;
+    if (!view.containerEl.contains(ev.target)) return;
     const api = view.excalidrawAPI;
     if (!api) return;
     const zoomGesture = ev.ctrlKey || ev.metaKey;
@@ -2872,92 +2864,6 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
         api.updateScene({ appState: patch, captureUpdate: "NEVER" });
       }
     } catch (err) {
-    }
-  }
-  async setInputMode(mode) {
-    this.settings.inputMode = mode;
-    await this.saveData(this.settings);
-    try {
-      if (mode === "pen") await this.focus.start();
-      else this.focus.stop();
-    } catch (err) {
-      console.warn("[optimizer] focus toggle failed", err);
-    }
-  }
-  async setMapScale(scale) {
-    this.settings.mapScale = scale;
-    await this.saveData(this.settings);
-    for (const panel of this.panels.values()) panel.applyMapScale(scale);
-  }
-  async saveSettingsAndSync() {
-    if (this._saveTimer) {
-      window.clearTimeout(this._saveTimer);
-      this._saveTimer = null;
-    }
-    await this.saveData(this.settings);
-    for (const panel of this.panels.values()) {
-      panel.applyLayout();
-      panel.invalidate();
-    }
-    this.safe("tick", () => this.tickAll());
-  }
-  /* --------------------------------------------------------- 面板生命周期 */
-  scheduleSync() {
-    if (this._syncTimer) window.clearTimeout(this._syncTimer);
-    this._syncTimer = window.setTimeout(() => {
-      this._syncTimer = null;
-      this.safe("navigator", () => this.sync());
-    }, 120);
-  }
-  shouldShow(leaf) {
-    const state = this.leafState.get(leaf);
-    if (state === "show") return true;
-    if (state === "hide") return false;
-    return Boolean(this.settings.autoShow);
-  }
-  /** 当前活动叶（兼容新旧 API）。 */
-  activeLeaf() {
-    const workspace = this.app.workspace;
-    if (typeof workspace.getMostRecentLeaf === "function") {
-      const leaf = workspace.getMostRecentLeaf();
-      if (leaf) return leaf;
-    }
-    return workspace.activeLeaf || null;
-  }
-  /** 轮询待挂载的画布：加载完（能拿到 canvas）就挂上小地图 */
-  ensurePendingLoop() {
-    if (this._pendingTimer) return;
-    this._pendingTimer = setInterval(() => {
-      const now = performance.now();
-      for (const [leaf, at] of Array.from(this.pending.entries())) {
-        const alive = leaf && leaf.view && leaf.view.containerEl && leaf.view.containerEl.isConnected;
-        if (!alive || now - at > 15e3) this.pending.delete(leaf);
-      }
-      if (!this.pending.size) {
-        clearInterval(this._pendingTimer);
-        this._pendingTimer = null;
-        return;
-      }
-      this.safe("navigator", () => this.sync());
-    }, 150);
-  }
-  /** 稳定性包装：同一处连续失败 5 次就停用该功能并提示，避免无声劣化 */
-  safe(name, fn, fallback) {
-    try {
-      const out = fn();
-      this._failures.delete(name);
-      return out;
-    } catch (err) {
-      const n = (this._failures.get(name) || 0) + 1;
-      this._failures.set(name, n);
-      if (n === 1 || n === 5) console.warn("[optimizer] " + name + " \u5931\u8D25 " + n + " \u6B21", err);
-      if (n === 5) {
-        this._moduleErrors[name] = String(err && (err.message || err));
-        if (name === "smooth" && this.smooth) this.smooth.enabled = false;
-        if (name === "navigator") this.settings.navigatorEnabled = false;
-        new import_obsidian2.Notice("Excali \u753B\u5E03\u4F18\u5316\uFF1A" + name + " \u8FDE\u7EED\u51FA\u9519\uFF0C\u5DF2\u81EA\u52A8\u505C\u7528");
-      }
-      return fallback;
     }
   }
   sync() {

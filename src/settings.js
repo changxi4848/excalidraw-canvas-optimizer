@@ -25,7 +25,6 @@ export const DEFAULT_SETTINGS = {
 
   /* 缩放锚点 */
   centerAnchor: true,
-  wheelGlobal: true,
 
   /* 顺滑缩放 */
   smoothEnabled: true,
@@ -69,7 +68,7 @@ export class MinimapSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("缩放锚点固定在画布中心")
-      .setDesc("开启：无论滚轮来自鼠标、触摸板还是数位板，都围绕画布中心缩放。关闭：围绕当前光标位置缩放。")
+      .setDesc("开启：围绕画布中心缩放。关闭：围绕当前光标位置缩放。建议数位板开启，否则缩放锚点仅跟随鼠标光标最后位置。")
       .addToggle((t) =>
         t.setValue(s.centerAnchor !== false).onChange(async (v) => {
           s.centerAnchor = v;
@@ -128,16 +127,6 @@ export class MinimapSettingTab extends PluginSettingTab {
     hint.textContent =
       "位置、大小、地图比例不在这里调：直接拖面板顶部的三颗点移动、拖右下角斜纹改大小、滚轮或用底部横条改比例。";
     adv.appendChild(hint);
-
-    new Setting(adv)
-      .setName("滚轮全局生效")
-      .setDesc("开启：光标不在画布上（例如停在侧边栏）时滚轮也缩放画布，适合 TourBox/数位板。关闭：只有光标在画布上才响应。")
-      .addToggle((t) =>
-        t.setValue(s.wheelGlobal !== false).onChange(async (v) => {
-          s.wheelGlobal = v;
-          await this.plugin.saveSettingsAndSync();
-        })
-      );
 
     new Setting(adv)
       .setName("自动显示小地图")
