@@ -1823,44 +1823,77 @@ var DEFAULT_SETTINGS = {
   mapScale: 0.11,
   standardX: 0,
   standardY: 0,
-  /* 交互模式 */
+  /* 缩放锚点 */
   centerAnchor: true,
-  inputMode: "mouse",
   /* 顺滑缩放 */
   smoothEnabled: true,
   smoothSettleMs: 120,
-  suppressHints: true
+  suppressHints: true,
+  /* 界面语言：zh / en */
+  uiLang: "zh"
 };
 var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
+  /** 中英双语取词 */
+  L(zh, en) {
+    return (this.plugin.settings.uiLang || "zh") === "en" ? en : zh;
+  }
   display() {
     const { containerEl } = this;
     const s = this.plugin.settings;
+    const L = (zh, en) => this.L(zh, en);
     containerEl.replaceChildren();
     const title = document.createElement("h2");
-    title.textContent = "Excali \u753B\u5E03\u4F18\u5316";
+    title.textContent = "Excali Canvas Optimizer";
     containerEl.appendChild(title);
     const intro = document.createElement("p");
     intro.className = "setting-item-description";
-    intro.textContent = "\u4E24\u5757\u529F\u80FD\uFF1A\u2460\u53F3\u4E0B\u89D2\u7684\u5BFC\u822A\u5C0F\u5730\u56FE\u2014\u2014\u4E0D\u7F29\u5C0F\u4E3B\u753B\u5E03\u4E5F\u80FD\u770B\u6E05\u6574\u5F20\u56FE\u7684\u4F4D\u7F6E\u548C\u5BF9\u9F50\uFF1B\u2461\u987A\u6ED1\u7F29\u653E\u2014\u2014\u7F29\u653E\u65F6\u5148\u51BB\u7ED3\u753B\u9762\uFF0C\u505C\u624B\u540E\u518D\u6E32\u67D3\u9AD8\u6E05\uFF0C\u51E0\u5343\u7B14\u753B\u4E5F\u4E0D\u5361\u3002";
+    intro.textContent = L(
+      "Excalidraw \u7684\u914D\u5957\u4F18\u5316\u63D2\u4EF6\uFF1A\u53F3\u4E0B\u89D2\u7684\u5BFC\u822A\u5C0F\u5730\u56FE\uFF08\u4E0D\u7F29\u5C0F\u4E5F\u80FD\u770B\u6E05\u5168\u56FE\uFF09+ \u7F29\u653E/\u62D6\u52A8\u7684\u51BB\u7ED3\u6E32\u67D3\uFF08\u51E0\u5343\u7B14\u753B\u4E5F\u4E0D\u5361\uFF09\u3002\u4E0D\u4FEE\u6539\u6587\u6863\u3001\u4E0D\u8FDB\u64A4\u9500\u6808\u3002",
+      "A companion optimizer for Excalidraw: a minimap navigator (see the whole drawing without zooming out) plus freeze-based zoom/pan rendering that keeps pages with thousands of strokes smooth. It never modifies your documents or the undo stack."
+    );
     containerEl.appendChild(intro);
-    containerEl.createEl("h3", { text: "\u5E38\u7528" });
-    new import_obsidian.Setting(containerEl).setName("\u663E\u793A\u5BFC\u822A\u5C0F\u5730\u56FE").setDesc("\u5173\u6389\u540E\u4E0D\u6302\u9762\u677F\u3001\u4E0D\u8F6E\u8BE2\uFF1B\u9700\u8981\u65F6\u53EF\u7528\u5DE6\u4FA7\u680F\u56FE\u6807\u6216\u547D\u4EE4\u5524\u51FA\u3002").addToggle(
+    new import_obsidian.Setting(containerEl).setName(L("\u754C\u9762\u8BED\u8A00", "Language")).setDesc(L("\u8BBE\u7F6E\u9875\u7684\u663E\u793A\u8BED\u8A00\uFF0C\u5207\u6362\u540E\u7ACB\u5373\u751F\u6548\u3002", "Language of this settings page. Applies immediately.")).addDropdown((d) => {
+      d.addOption("zh", "\u4E2D\u6587");
+      d.addOption("en", "English");
+      return d.setValue(s.uiLang || "zh").onChange(async (v) => {
+        s.uiLang = v;
+        await this.plugin.saveSettingsAndSync();
+        this.display();
+      });
+    });
+    containerEl.createEl("h3", { text: L("\u5E38\u7528", "General") });
+    new import_obsidian.Setting(containerEl).setName(L("\u663E\u793A\u5BFC\u822A\u5C0F\u5730\u56FE", "Show navigator minimap")).setDesc(
+      L(
+        "\u5728 Excalidraw \u753B\u5E03\u89D2\u843D\u663E\u793A\u7F29\u7565\u5730\u56FE\uFF1B\u5173\u6389\u540E\u4E0D\u6302\u9762\u677F\u3001\u4E0D\u8F6E\u8BE2\u3002",
+        "Show a thumbnail of the whole drawing in the canvas corner. Turning it off unmounts the panel and stops polling."
+      )
+    ).addToggle(
       (t) => t.setValue(s.navigatorEnabled !== false).onChange(async (v) => {
         s.navigatorEnabled = v;
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u70B9\u56FA\u5B9A\u5728\u753B\u5E03\u4E2D\u5FC3").setDesc("\u5F00\u542F\u540E\u7F29\u653E\u59CB\u7EC8\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\uFF1B\u5173\u95ED\u5219\u8DDF\u968F\u5149\u6807\u3002TourBox \u8FD9\u7C7B\u6EDA\u8F6E\u8BBE\u5907\u5EFA\u8BAE\u5728\u9A71\u52A8\u91CC\u628A\u65CB\u94AE\u6620\u5C04\u6210\u7EAF\u952E\u76D8\u6309\u952E\uFF08Ctrl+= \u653E\u5927\u3001Ctrl+- \u7F29\u5C0F\u3001Ctrl+0 \u590D\u4F4D\uFF09\uFF1A\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\u65F6\u6EDA\u8F6E\u4E8B\u4EF6\u4E0D\u4F1A\u4F20\u7ED9\u753B\u5E03\uFF0C\u63D2\u4EF6\u63A5\u4E0D\u5230\u3002").addToggle(
-      (t) => t.setValue(this.plugin.settings.centerAnchor !== false).onChange(async (v) => {
-        this.plugin.settings.centerAnchor = v;
+    new import_obsidian.Setting(containerEl).setName(L("\u7F29\u653E\u951A\u70B9\u56FA\u5B9A\u5728\u753B\u5E03\u4E2D\u5FC3", "Lock zoom anchor to canvas center")).setDesc(
+      L(
+        "\u5F00\u542F\u540E\u7F29\u653E\u59CB\u7EC8\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\uFF1B\u5173\u95ED\u5219\u8DDF\u968F\u5149\u6807\u3002TourBox \u8FD9\u7C7B\u6EDA\u8F6E\u8BBE\u5907\u5EFA\u8BAE\u5728\u9A71\u52A8\u91CC\u628A\u65CB\u94AE\u6620\u5C04\u6210\u7EAF\u952E\u76D8\u6309\u952E\uFF08Ctrl+= \u653E\u5927\u3001Ctrl+- \u7F29\u5C0F\u3001Ctrl+0 \u590D\u4F4D\uFF09\uFF1A\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\u65F6\u6EDA\u8F6E\u4E8B\u4EF6\u4E0D\u4F1A\u4F20\u7ED9\u753B\u5E03\uFF0C\u63D2\u4EF6\u63A5\u4E0D\u5230\u3002",
+        "When on, zooming always pivots on the canvas center; when off, it follows the cursor. For wheel devices such as TourBox, map the knob to plain keys instead (Ctrl+= zoom in, Ctrl+- zoom out, Ctrl+0 reset): wheel events outside the canvas are consumed by Obsidian and never reach the plugin."
+      )
+    ).addToggle(
+      (t) => t.setValue(s.centerAnchor !== false).onChange(async (v) => {
+        s.centerAnchor = v;
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u987A\u6ED1\u7F29\u653E").setDesc("\u7F29\u653E\u65F6\u51BB\u7ED3\u753B\u9762\u3001\u53EA\u79FB\u52A8\u4E00\u5F20\u4F4D\u56FE\uFF0C\u505C\u624B\u540E\u518D\u6E32\u67D3\u9AD8\u6E05\u3002\u5173\u6389\u5C31\u662F Excalidraw \u539F\u751F\u884C\u4E3A\u3002").addToggle(
+    new import_obsidian.Setting(containerEl).setName(L("\u987A\u6ED1\u7F29\u653E", "Smooth zoom")).setDesc(
+      L(
+        "\u7F29\u653E\u65F6\u51BB\u7ED3\u753B\u9762\u3001\u53EA\u79FB\u52A8\u4E00\u5F20\u4F4D\u56FE\uFF0C\u505C\u624B\u540E\u518D\u6E32\u67D3\u9AD8\u6E05\u3002\u5173\u6389\u5C31\u662F Excalidraw \u539F\u751F\u884C\u4E3A\u3002",
+        "Freeze the current frame during zoom gestures, move a single bitmap, then render once on release. Turn off for native Excalidraw behaviour."
+      )
+    ).addToggle(
       (t) => t.setValue(s.smoothEnabled !== false).onChange(async (v) => {
         s.smoothEnabled = v;
         if (this.plugin.smooth) {
@@ -1870,40 +1903,56 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u5173\u95ED\u753B\u5E03\u63D0\u793A\uFF08Show hint\uFF09").setDesc("Excalidraw \u90A3\u6761\u201C\u8981\u79FB\u52A8\u753B\u5E03\uFF0C\u8BF7\u6309\u4F4F\u2026\u201D\u7684\u63D0\u793A\u6BCF\u6B21\u91CD\u542F\u90FD\u4F1A\u81EA\u5DF1\u56DE\u6765\uFF0C\u8FD9\u91CC\u6BCF\u6B21\u8FDB\u5165\u753B\u5E03\u65F6\u81EA\u52A8\u5173\u6389\u3002").addToggle(
+    new import_obsidian.Setting(containerEl).setName(L("\u5173\u95ED\u753B\u5E03\u63D0\u793A\uFF08Show hint\uFF09", "Suppress \u201CShow hint\u201D")).setDesc(
+      L(
+        "Excalidraw \u90A3\u6761\u64CD\u4F5C\u63D0\u793A\u6BCF\u6B21\u6253\u5F00\u90FD\u4F1A\u81EA\u5DF1\u56DE\u6765\uFF0C\u8FD9\u91CC\u5728\u8FDB\u5165\u753B\u5E03\u548C\u5207\u6362\u6807\u7B7E\u540E\u81EA\u52A8\u5173\u6389\u3002",
+        "Excalidraw re-enables its hint on every open; this turns it off whenever you enter a drawing or switch tabs."
+      )
+    ).addToggle(
       (t) => t.setValue(s.suppressHints !== false).onChange(async (v) => {
         s.suppressHints = v;
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u505C\u624B\u5224\u5B9A").setDesc("\u505C\u624B\u540E\u7B49\u591A\u4E45\u624D\u6E32\u67D3\u9AD8\u6E05\uFF08\u6BEB\u79D2\uFF09\u3002\u8D8A\u5927\u8D8A\u7701 CPU\uFF0C\u4F46\u53D8\u6E05\u6670\u66F4\u6162\uFF1B\u7F29\u5F97\u5F88\u5C0F\u65F6\u63D2\u4EF6\u4F1A\u81EA\u52A8\u518D\u5EF6\u957F\u3002").addSlider(
-      (sl) => sl.setLimits(120, 600, 20).setValue(s.smoothSettleMs || 260).setDynamicTooltip().onChange(async (v) => {
+    new import_obsidian.Setting(containerEl).setName(L("\u505C\u624B\u5224\u5B9A", "Settle delay")).setDesc(
+      L(
+        "\u505C\u624B\u540E\u7B49\u591A\u4E45\u624D\u6E32\u67D3\u9AD8\u6E05\uFF08\u6BEB\u79D2\uFF09\u3002\u8D8A\u5927\u8D8A\u7701 CPU\uFF0C\u4F46\u53D8\u6E05\u6670\u66F4\u6162\uFF1B\u7F29\u5F97\u5F88\u5C0F\u65F6\u4F1A\u81EA\u52A8\u518D\u5EF6\u957F\u3002",
+        "How long to wait after you stop before rendering at full quality (ms). Larger saves CPU but sharpens later; it extends automatically when zoomed far out."
+      )
+    ).addSlider(
+      (sl) => sl.setLimits(120, 600, 20).setValue(s.smoothSettleMs || 120).setDynamicTooltip().onChange(async (v) => {
         s.smoothSettleMs = v;
         await this.plugin.saveSettingsAndSync();
       })
     );
-    const hint = document.createElement("p");
-    hint.className = "setting-item-description";
-    hint.textContent = "\u4F4D\u7F6E\u3001\u5927\u5C0F\u3001\u5730\u56FE\u6BD4\u4F8B\u4E0D\u5728\u8FD9\u91CC\u8C03\uFF1A\u76F4\u63A5\u62D6\u9762\u677F\u9876\u90E8\u7684\u4E09\u9897\u70B9\u79FB\u52A8\u3001\u62D6\u53F3\u4E0B\u89D2\u659C\u7EB9\u6539\u5927\u5C0F\u3001\u6EDA\u8F6E\u6216\u7528\u5E95\u90E8\u6A2A\u6761\u6539\u6BD4\u4F8B\u3002";
-    adv.appendChild(hint);
-    containerEl.createEl("h3", { text: "\u9AD8\u7EA7" });
-    new import_obsidian.Setting(containerEl).setName("\u5C0F\u5730\u56FE\u5237\u65B0\u95F4\u9694").setDesc("\u591A\u4E45\u91CD\u65B0\u91C7\u6837\u4E00\u6B21\u4E3B\u753B\u5E03\u72B6\u6001\u3002\u6570\u503C\u8D8A\u5927\u8D8A\u7701 CPU\uFF0C\u4F46\u84DD\u6846\u4E0E\u5C0F\u5730\u56FE\u8DDF\u624B\u4F1A\u53D8\u8FDF\u949D\uFF1B\u8D8A\u5C0F\u8D8A\u8DDF\u624B\u3001\u5F00\u9500\u8D8A\u9AD8\u3002\u62D6\u52A8\u4E3B\u753B\u5E03\u65F6\u4F1A\u81EA\u52A8\u63D0\u901F\u5230 60 \u6BEB\u79D2\u3002").addSlider(
+    containerEl.createEl("h3", { text: L("\u9AD8\u7EA7", "Advanced") });
+    new import_obsidian.Setting(containerEl).setName(L("\u5C0F\u5730\u56FE\u5237\u65B0\u95F4\u9694", "Minimap refresh interval")).setDesc(
+      L(
+        "\u591A\u4E45\u91CD\u65B0\u91C7\u6837\u4E00\u6B21\u4E3B\u753B\u5E03\u72B6\u6001\u3002\u6570\u503C\u8D8A\u5927\u8D8A\u7701 CPU\uFF0C\u4F46\u84DD\u6846\u4E0E\u5C0F\u5730\u56FE\u8DDF\u624B\u4F1A\u53D8\u8FDF\u949D\uFF1B\u8D8A\u5C0F\u8D8A\u8DDF\u624B\u3001\u5F00\u9500\u8D8A\u9AD8\u3002\u62D6\u52A8\u4E3B\u753B\u5E03\u65F6\u4F1A\u81EA\u52A8\u63D0\u901F\u5230 60 \u6BEB\u79D2\u3002",
+        "How often the minimap re-samples the canvas. Larger values save CPU but make the viewport box lag; smaller values feel smoother but cost more. It speeds up to 60 ms while you are panning."
+      )
+    ).addSlider(
       (sl) => sl.setLimits(60, 600, 10).setValue(Number(s.tickMs) || 250).setDynamicTooltip().onChange(async (v) => {
         s.tickMs = v;
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u91CD\u7F6E\u6240\u6709\u8BBE\u7F6E").setDesc("\u628A\u672C\u63D2\u4EF6\u7684\u5168\u90E8\u8BBE\u7F6E\u6062\u590D\u4E3A\u9ED8\u8BA4\u503C\uFF08\u542B\u9762\u677F\u4F4D\u7F6E\u3001\u5C3A\u5BF8\u3001\u7F29\u653E\u6BD4\u4F8B\uFF09\u3002").addButton(
-      (b) => b.setButtonText("\u5168\u90E8\u91CD\u7F6E").setWarning().onClick(async () => {
+    new import_obsidian.Setting(containerEl).setName(L("\u91CD\u7F6E\u6240\u6709\u8BBE\u7F6E", "Reset all settings")).setDesc(
+      L(
+        "\u628A\u672C\u63D2\u4EF6\u7684\u5168\u90E8\u8BBE\u7F6E\u6062\u590D\u4E3A\u9ED8\u8BA4\u503C\uFF08\u542B\u9762\u677F\u4F4D\u7F6E\u3001\u5C3A\u5BF8\u3001\u7F29\u653E\u6BD4\u4F8B\uFF09\u3002",
+        "Restore every setting to its default value, including panel position, size and map scale."
+      )
+    ).addButton(
+      (b) => b.setButtonText(L("\u5168\u90E8\u91CD\u7F6E", "Reset")).setWarning().onClick(async () => {
         Object.assign(this.plugin.settings, DEFAULT_SETTINGS);
         await this.plugin.saveSettingsAndSync();
         this.plugin.sync();
         this.display();
-        new import_obsidian.Notice("\u5DF2\u6062\u590D\u9ED8\u8BA4\u8BBE\u7F6E");
+        new import_obsidian.Notice(L("\u5DF2\u6062\u590D\u9ED8\u8BA4\u8BBE\u7F6E", "Settings reset to defaults"));
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u68C0\u6D4B\u66F4\u65B0").setDesc("\u4ECE GitHub \u68C0\u67E5\u662F\u5426\u6709\u65B0\u7248\u672C\uFF08\u5F53\u524D v" + this.plugin.manifest.version + "\uFF09").addButton(
-      (b) => b.setButtonText("\u68C0\u6D4B").onClick(async () => {
+    new import_obsidian.Setting(containerEl).setName(L("\u68C0\u6D4B\u66F4\u65B0", "Check for updates")).setDesc(L("\u4ECE GitHub \u68C0\u67E5\u662F\u5426\u6709\u65B0\u7248\u672C\uFF08\u5F53\u524D v" + this.plugin.manifest.version + "\uFF09", "Check GitHub for a newer release (current v" + this.plugin.manifest.version + ")")).addButton(
+      (b) => b.setButtonText(L("\u68C0\u6D4B", "Check")).onClick(async () => {
         const cur = this.plugin.manifest.version;
         const repo = "https://github.com/changxi4848/excalidraw-canvas-optimizer";
         try {
@@ -1915,43 +1964,59 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
           });
           const res = await Promise.race([req, timeout]);
           if (!res || res.status >= 400) {
-            new import_obsidian.Notice("\u68C0\u6D4B\u5931\u8D25\uFF1AGitHub \u8FD4\u56DE " + (res ? res.status : "\u65E0\u54CD\u5E94") + "\u3002\u53EF\u80FD\u662F\u7F51\u7EDC\u65E0\u6CD5\u8BBF\u95EE GitHub\u3002\n\u53D1\u5E03\u9875\uFF1A" + repo + "/releases", 15e3);
+            new import_obsidian.Notice(L("\u68C0\u6D4B\u5931\u8D25\uFF1AGitHub \u8FD4\u56DE " + (res ? res.status : "\u65E0\u54CD\u5E94") + "\u3002\u53EF\u80FD\u662F\u7F51\u7EDC\u65E0\u6CD5\u8BBF\u95EE GitHub\u3002\n\u53D1\u5E03\u9875\uFF1A" + repo + "/releases", "Check failed: GitHub returned " + (res ? res.status : "no response") + ". The network may not reach GitHub.\nReleases: " + repo + "/releases"), 15e3);
             return;
           }
           const data = res.json || {};
           const tag = String(data.tag_name || "");
           const latest = tag.replace(/^v/i, "");
           if (!latest) {
-            new import_obsidian.Notice("GitHub \u4E0A\u8FD8\u6CA1\u6709\u53D1\u5E03\u7248\u672C\n" + repo + "/releases", 1e4);
+            new import_obsidian.Notice(L("GitHub \u4E0A\u8FD8\u6CA1\u6709\u53D1\u5E03\u7248\u672C\n" + repo + "/releases", "No release published yet\n" + repo + "/releases"), 1e4);
             return;
           }
-          if (latest === cur) new import_obsidian.Notice("\u5DF2\u662F\u6700\u65B0\u7248\u672C v" + cur);
-          else new import_obsidian.Notice("\u53D1\u73B0\u65B0\u7248\u672C " + tag + "\uFF08\u5F53\u524D v" + cur + "\uFF09\n" + (data.html_url || repo + "/releases"), 15e3);
+          if (latest === cur) new import_obsidian.Notice(L("\u5DF2\u662F\u6700\u65B0\u7248\u672C v", "You are on the latest version v") + cur);
+          else new import_obsidian.Notice(L("\u53D1\u73B0\u65B0\u7248\u672C " + tag + "\uFF08\u5F53\u524D v" + cur + "\uFF09\n" + (data.html_url || repo + "/releases"), "New version " + tag + " available (current v" + cur + ")\n" + (data.html_url || repo + "/releases")), 15e3);
         } catch (err) {
           const msg = String(err && err.message ? err.message : err);
           if (msg === "timeout") {
-            new import_obsidian.Notice("\u68C0\u6D4B\u8D85\u65F6\uFF1A10 \u79D2\u6CA1\u8FDE\u4E0A GitHub\u3002\u9700\u8981\u4EE3\u7406\u624D\u80FD\u8BBF\u95EE\u3002\n\u53D1\u5E03\u9875\uFF1A" + repo + "/releases", 15e3);
+            new import_obsidian.Notice(L("\u68C0\u6D4B\u8D85\u65F6\uFF1A10 \u79D2\u6CA1\u8FDE\u4E0A GitHub\u3002\u9700\u8981\u4EE3\u7406\u624D\u80FD\u8BBF\u95EE\u3002\n\u53D1\u5E03\u9875\uFF1A" + repo + "/releases", "Timed out: could not reach GitHub within 10 s. A proxy may be required.\nReleases: " + repo + "/releases"), 15e3);
           } else {
-            new import_obsidian.Notice("\u68C0\u6D4B\u5931\u8D25\uFF1A" + msg + "\n\u53EF\u80FD\u662F\u7F51\u7EDC\u65E0\u6CD5\u8BBF\u95EE GitHub\u3002\u53D1\u5E03\u9875\uFF1A" + repo + "/releases", 15e3);
+            new import_obsidian.Notice(L("\u68C0\u6D4B\u5931\u8D25\uFF1A" + msg + "\n\u53EF\u80FD\u662F\u7F51\u7EDC\u65E0\u6CD5\u8BBF\u95EE GitHub\u3002\u53D1\u5E03\u9875\uFF1A" + repo + "/releases", "Check failed: " + msg + "\nGitHub may be unreachable.\nReleases: " + repo + "/releases"), 15e3);
           }
         }
       })
     );
-    const aboutLines = [
-      "Excali Canvas Optimizer  v1.0.2",
-      "\u4F5C\u8005\uFF1A\u5362\u957F\u5E0C  https://github.com/changxi4848",
-      "Excalidraw \u7684\u7B2C\u4E09\u65B9\u8F85\u52A9\u4F18\u5316\u63D2\u4EF6\uFF0C\u4E2A\u4EBA\u5F00\u53D1\u7EF4\u62A4\uFF0C\u4EC5\u4F9B\u5B66\u4E60\u4F7F\u7528\u53C2\u8003\uFF0C\u4EC5\u652F\u6301 Windows \u684C\u9762\u7AEF\u3002",
-      "",
-      "\u4E24\u4E2A\u529F\u80FD\uFF1A\u5BFC\u822A\u5C0F\u5730\u56FE + \u7F29\u653E/\u62D6\u52A8\u6027\u80FD\u4F18\u5316\u3002",
-      "\u5BFC\u822A\u5C0F\u5730\u56FE\uFF1A\u7F29\u7565\u56FE\u53EA\u753B\u8272\u5757\u4E0E\u6298\u7EBF\uFF0C\u51E0\u5343\u7B14\u753B\u4E5F\u80FD\u770B\u6E05\u5168\u5C40\uFF1B\u5207\u6807\u7B7E\u81EA\u52A8\u5237\u65B0\uFF0C\u5F00\u5173\u5373\u65F6\u751F\u6548\u3002",
-      "\u6027\u80FD\u4F18\u5316\uFF1A\u7F29\u653E\u4E0E\u62D6\u52A8\u65F6\u51BB\u7ED3\u753B\u9762\u3001\u53EA\u79FB\u52A8\u4E00\u5F20\u4F4D\u56FE\uFF0C\u505C\u624B\u540E\u6E32\u67D3\u4E00\u5E27\u9AD8\u6E05\uFF0C\u907F\u514D\u6BCF\u5E27\u5168\u91CF\u91CD\u7ED8\u3002",
-      "",
-      "\u5C0F\u5730\u56FE\u624B\u52BF\uFF1A\u70B9\u51FB = \u628A\u4E3B\u753B\u5E03\u79FB\u8FC7\u53BB\uFF1B\u62D6\u4EAE\u8272\u533A = \u79FB\u52A8\u89C6\u53E3\uFF1B\u62D6\u6697\u8272\u533A = \u62D6\u5730\u56FE\u5E76\u8BBE\u5B9A\u6807\u51C6\u4F4D\u7F6E\uFF1B\u6EDA\u8F6E = \u7F29\u653E\u5730\u56FE\uFF1BShift+\u62D6 = \u9501\u8F74\uFF1B\u53CC\u51FB = \u6574\u5F20\u56FE\u3002",
-      "\u9762\u677F\u624B\u52BF\uFF1A\u62D6\u4E09\u9897\u70B9 = \u79FB\u52A8\uFF1B\u62D6\u53F3\u4E0B\u89D2 = \u6539\u5927\u5C0F\uFF1B\u25CE = \u56DE\u6B63\uFF1B\u5E95\u90E8\u6A2A\u6761 = \u7F29\u653E\u5730\u56FE\uFF08\u8D8A\u9760\u8FB9\u8D8A\u7CBE\u7EC6\uFF09\u3002",
-      "\u4E3B\u753B\u5E03\u7F29\u653E\uFF1ACtrl+\u6EDA\u8F6E / \u89E6\u6478\u677F\u53CC\u6307 / Ctrl+= \u653E\u5927 / Ctrl+- \u7F29\u5C0F / Ctrl+0 \u590D\u4F4D\uFF08\u53EA\u5728 Excalidraw \u89C6\u56FE\u5185\u62E6\u622A\uFF0C\u4E0D\u4F1A\u7F29\u653E\u6574\u4E2A\u754C\u9762\uFF09\u3002",
-      "\u4E3B\u753B\u5E03\u5E73\u79FB\uFF1AAlt+\u65B9\u5411\u952E / \u7A7A\u683C+\u62D6 / \u4E2D\u952E\u62D6 / \u624B\u578B\u5DE5\u5177\u3002",
-      "\u8BF4\u660E\uFF1A\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\u65F6\uFF0C\u6EDA\u8F6E\u4E8B\u4EF6\u7531 Obsidian \u754C\u9762\u63A5\u6536\uFF0C\u63D2\u4EF6\u6536\u4E0D\u5230\uFF1B\u56E0\u6B64 TourBox \u7B49\u6EDA\u8F6E\u8BBE\u5907\u5EFA\u8BAE\u5728\u9A71\u52A8\u91CC\u6620\u5C04\u6210\u7EAF\u952E\u76D8\u6309\u952E\uFF08Ctrl+= / Ctrl+-\uFF09\u3002"
-    ];
+    containerEl.createEl("h3", { text: L("\u5173\u4E8E", "About") });
+    const aboutLines = L(
+      [
+        "Excali Canvas Optimizer  v" + this.plugin.manifest.version,
+        "\u4F5C\u8005\uFF1A\u5362\u957F\u5E0C  https://github.com/changxi4848",
+        "Excalidraw \u7684\u7B2C\u4E09\u65B9\u8F85\u52A9\u4F18\u5316\u63D2\u4EF6\uFF0C\u4E2A\u4EBA\u5F00\u53D1\u7EF4\u62A4\uFF0C\u4EC5\u4F9B\u5B66\u4E60\u4F7F\u7528\u53C2\u8003\uFF0C\u4EC5\u652F\u6301 Windows \u684C\u9762\u7AEF\u3002",
+        "",
+        "\u4E24\u4E2A\u529F\u80FD\uFF1A\u5BFC\u822A\u5C0F\u5730\u56FE + \u7F29\u653E/\u62D6\u52A8\u6027\u80FD\u4F18\u5316\u3002",
+        "\u5BFC\u822A\u5C0F\u5730\u56FE\uFF1A\u7F29\u7565\u56FE\u53EA\u753B\u8272\u5757\u4E0E\u6298\u7EBF\uFF0C\u51E0\u5343\u7B14\u753B\u4E5F\u80FD\u770B\u6E05\u5168\u5C40\uFF1B\u5207\u6807\u7B7E\u81EA\u52A8\u5237\u65B0\uFF0C\u5F00\u5173\u5373\u65F6\u751F\u6548\u3002",
+        "\u6027\u80FD\u4F18\u5316\uFF1A\u7F29\u653E\u4E0E\u62D6\u52A8\u65F6\u51BB\u7ED3\u753B\u9762\u3001\u53EA\u79FB\u52A8\u4E00\u5F20\u4F4D\u56FE\uFF0C\u505C\u624B\u540E\u6E32\u67D3\u4E00\u5E27\u9AD8\u6E05\uFF0C\u907F\u514D\u6BCF\u5E27\u5168\u91CF\u91CD\u7ED8\u3002",
+        "",
+        "\u5C0F\u5730\u56FE\u624B\u52BF\uFF1A\u70B9\u51FB = \u628A\u4E3B\u753B\u5E03\u79FB\u8FC7\u53BB\uFF1B\u62D6\u4EAE\u8272\u533A = \u79FB\u52A8\u89C6\u53E3\uFF1B\u62D6\u6697\u8272\u533A = \u62D6\u5730\u56FE\u5E76\u8BBE\u5B9A\u6807\u51C6\u4F4D\u7F6E\uFF1B\u6EDA\u8F6E = \u7F29\u653E\u5730\u56FE\uFF1BShift+\u62D6 = \u9501\u8F74\uFF1B\u53CC\u51FB = \u6574\u5F20\u56FE\u3002",
+        "\u9762\u677F\u624B\u52BF\uFF1A\u62D6\u4E09\u9897\u70B9 = \u79FB\u52A8\uFF1B\u62D6\u53F3\u4E0B\u89D2 = \u6539\u5927\u5C0F\uFF1B\u25CE = \u56DE\u6B63\uFF1B\u5E95\u90E8\u6A2A\u6761 = \u7F29\u653E\u5730\u56FE\uFF08\u8D8A\u9760\u8FB9\u8D8A\u7CBE\u7EC6\uFF09\u3002",
+        "\u4E3B\u753B\u5E03\u7F29\u653E\uFF1ACtrl+\u6EDA\u8F6E / \u89E6\u6478\u677F\u53CC\u6307 / Ctrl+= \u653E\u5927 / Ctrl+- \u7F29\u5C0F / Ctrl+0 \u590D\u4F4D\u3002",
+        "\u4E3B\u753B\u5E03\u5E73\u79FB\uFF1AAlt+\u65B9\u5411\u952E / \u7A7A\u683C+\u62D6 / \u4E2D\u952E\u62D6 / \u624B\u578B\u5DE5\u5177\u3002"
+      ],
+      [
+        "Excali Canvas Optimizer  v" + this.plugin.manifest.version,
+        "Author: Lu Changxi  https://github.com/changxi4848",
+        "A third-party companion optimizer for Excalidraw. Personal project, provided as-is for learning and reference. Windows desktop only.",
+        "",
+        "Two features: navigator minimap + smooth zoom/pan.",
+        "Minimap: draws only blocks and polylines, so thousands of strokes stay readable; refreshes on tab switch and toggles instantly.",
+        "Smooth zoom/pan: freezes the frame during gestures, moves one bitmap, then renders once on release instead of re-rendering every frame.",
+        "",
+        "Minimap: click = jump the canvas there; drag the blue box = pan; drag the dim area = move the map and set a new standard position; wheel = zoom the map; Shift+drag = lock an axis; double-click = fit the drawing.",
+        "Panel: drag the three dots = move; drag the bottom-right corner = resize; \u25CE = recenter; bottom bar = zoom the map (finer towards the edges).",
+        "Canvas zoom: Ctrl+wheel / trackpad pinch / Ctrl+= / Ctrl+- / Ctrl+0.",
+        "Canvas pan: Alt+arrow keys / Space+drag / middle-drag / hand tool."
+      ]
+    );
     for (const line of aboutLines) {
       const p = document.createElement("p");
       p.className = "setting-item-description";
