@@ -80,12 +80,22 @@ export class SmoothZoom {
   }
 
   view() {
-    const leaf = this.app.workspace.getMostRecentLeaf
-      ? this.app.workspace.getMostRecentLeaf()
-      : this.app.workspace.activeLeaf;
-    const v = leaf && leaf.view;
-    if (!v || !v.getViewType || v.getViewType() !== "excalidraw") return null;
-    return v;
+    const ws = this.app.workspace;
+    const pick = (leaf) => {
+      const v = leaf && leaf.view;
+      return v && v.getViewType && v.getViewType() === "excalidraw" ? v : null;
+    };
+    const direct = pick(ws.activeLeaf) || pick(ws.getMostRecentLeaf ? ws.getMostRecentLeaf() : null);
+    if (direct) return direct;
+    // 光标在侧边栏/标签栏时，最近叶子可能是别的视图；退回到任意可见的 Excalidraw
+    try {
+      const leaves = ws.getLeavesOfType("excalidraw") || [];
+      for (const leaf of leaves) {
+        const v = pick(leaf);
+        if (v && v.containerEl && v.containerEl.isConnected && v.containerEl.clientWidth > 80) return v;
+      }
+    } catch (err) { /* ignore */ }
+    return null;
   }
 
   /** 场景画布：静态层 + 交互层 */
@@ -163,8 +173,8 @@ export class SmoothZoom {
       scrollX: baseScrollX,
       scrollY: baseScrollY,
       // 笔模式的滚轮事件来自笔尖，和回中后的鼠标光标不是一回事，统一锚在画布中心
-      ax: (ev && this.settings.centerAnchor === false) ? ev.clientX - rect.left : rect.width / 2,
-      ay: (ev && this.settings.centerAnchor === false) ? ev.clientY - rect.top : rect.height / 2,
+      ax: (ev && this._anchorCenter === false) ? ev.clientX - rect.left : rect.width / 2,
+      ay: (ev && this._anchorCenter === false) ? ev.clientY - rect.top : rect.height / 2,
       startClientX: ev ? ev.clientX : 0,
       startClientY: ev ? ev.clientY : 0,
     };
@@ -339,8 +349,11 @@ export class SmoothZoom {
     if (ev.target && ev.target.closest && ev.target.closest(".emm-panel")) return; // 导航窗自己处理
     const view = this.view();
     if (!view) return;
-    // 笔模式（TourBox）：光标不一定要在画布上，否则滚轮会被路由到别的面板
-    if (!view.containerEl.contains(ev.target)) return;
+    const inView = view.containerEl.contains(ev.target);
+    const isZoomKey = ev.ctrlKey || ev.metaKey;
+    // 普通滚轮只在画布内生效；Ctrl+滚轮在任何位置都缩放画布（光标停在侧边栏/标签栏时也能用）
+    if (!inView && !isZoomKey) return;
+    this._anchorCenter = !inView || this.settings.centerAnchor !== false;
     const api = view.excalidrawAPI;
     if (!api) return;
 
