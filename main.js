@@ -1,9 +1,8 @@
-var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -16,15 +15,8 @@ var __copyProps = (to, from, except, desc) => {
   }
   return to;
 };
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
 // src/main.js
 var main_exports = {};
@@ -32,7 +24,7 @@ __export(main_exports, {
   default: () => ExcalidrawMinimapPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian3 = require("obsidian");
+var import_obsidian2 = require("obsidian");
 
 // src/geometry.js
 var MIN_ZOOM = 0.1;
@@ -432,9 +424,9 @@ function drawScene(ctx, model, opts) {
       continue;
     }
     if (item.kind === "text") {
-      const fs2 = (item.fontSize || 20) * s;
-      if (fs2 < 12) {
-        push(tinyTexts, item.color, [item.x * s + tx, item.y * s + ty, Math.max(item.w * s, 1), fs2, item.lineHeight || 1.25, item.text]);
+      const fs = (item.fontSize || 20) * s;
+      if (fs < 12) {
+        push(tinyTexts, item.color, [item.x * s + tx, item.y * s + ty, Math.max(item.w * s, 1), fs, item.lineHeight || 1.25, item.text]);
       } else {
         texts.push(item);
       }
@@ -591,11 +583,11 @@ function drawScene(ctx, model, opts) {
     ctx.lineCap = "round";
     for (let i = 0; i < list.length; i += 1) {
       const t = list[i];
-      const [x, y, w, fs2, lh, text] = t;
+      const [x, y, w, fs, lh, text] = t;
       const lines = String(text || "").split("\n").length || 1;
-      const lineH = fs2 * lh;
-      const amp = Math.max(0.4, Math.min(fs2 * 0.16, 1.4));
-      const step = Math.max(1.2, Math.min(fs2 * 0.55, 3));
+      const lineH = fs * lh;
+      const amp = Math.max(0.4, Math.min(fs * 0.16, 1.4));
+      const step = Math.max(1.2, Math.min(fs * 0.55, 3));
       for (let l = 0; l < lines; l += 1) {
         const by = y + lineH * (l + 0.45);
         ctx.beginPath();
@@ -619,8 +611,8 @@ function drawScene(ctx, model, opts) {
     ctx.textBaseline = "middle";
     for (let i = 0; i < texts.length; i += 1) {
       const item = texts[i];
-      const fs2 = (item.fontSize || 20) * s;
-      const lh = fs2 * (item.lineHeight || 1.25);
+      const fs = (item.fontSize || 20) * s;
+      const lh = fs * (item.lineHeight || 1.25);
       const x = item.x * s + tx;
       const y = item.y * s + ty;
       const w = item.w * s;
@@ -629,7 +621,7 @@ function drawScene(ctx, model, opts) {
       ctx.beginPath();
       ctx.rect(x - 1, y - 1, w + 2, h + 2);
       ctx.clip();
-      ctx.font = `${fs2.toFixed(1)}px ${FONT_STACK}`;
+      ctx.font = `${fs.toFixed(1)}px ${FONT_STACK}`;
       ctx.fillStyle = item.color;
       ctx.textAlign = item.align === "center" ? "center" : item.align === "right" ? "right" : "left";
       const anchorX = item.align === "center" ? x + w / 2 : item.align === "right" ? x + w : x;
@@ -2336,7 +2328,9 @@ var SmoothZoom = class {
     if (!this.enabled) return;
     if (ev.target && ev.target.closest && ev.target.closest(".emm-panel")) return;
     const view = this.view();
-    if (!view || !view.containerEl.contains(ev.target)) return;
+    if (!view) return;
+    const inView = view.containerEl.contains(ev.target);
+    if (!inView && this.settings.inputMode !== "pen") return;
     const api = view.excalidrawAPI;
     if (!api) return;
     const zoomGesture = ev.ctrlKey || ev.metaKey;
@@ -2712,7 +2706,7 @@ function buildUnderlay(els, cover, scale, paper, images) {
     }
     const bg = el.backgroundColor;
     const hasBg = bg && bg !== "transparent" && bg !== "#transparent";
-    const path2 = () => {
+    const path = () => {
       ctx.beginPath();
       if (el.type === "ellipse") {
         ctx.ellipse(L + W / 2, T + H / 2, Math.max(W / 2, 0.3), Math.max(H / 2, 0.3), 0, 0, Math.PI * 2);
@@ -2737,12 +2731,12 @@ function buildUnderlay(els, cover, scale, paper, images) {
       }
     };
     if (hasBg) {
-      path2();
+      path();
       ctx.fillStyle = bg;
       ctx.fill();
     }
     if (el.strokeColor && el.strokeColor !== "transparent") {
-      path2();
+      path();
       ctx.strokeStyle = el.strokeColor;
       ctx.lineWidth = Math.max(0.35, (Number(el.strokeWidth) || 2) * scale);
       ctx.stroke();
@@ -2751,307 +2745,20 @@ function buildUnderlay(els, cover, scale, paper, images) {
   return cv;
 }
 
-// src/focus.js
-var import_obsidian2 = require("obsidian");
-var import_child_process = require("child_process");
-var import_fs = __toESM(require("fs"), 1);
-var import_path = __toESM(require("path"), 1);
-var HELPER_PORT = 37250;
-var DEFAULT_SETTINGS2 = {
-  enableFocusFix: true,
-  enableWheelWake: true,
-  helperPython: "C:\\Users\\14785\\AppData\\Local\\Python\\pythoncore-3.14-64\\pythonw.exe",
-  autoStartHelper: true
-};
+// stub:focus-stub
 var FocusHelper = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.app = plugin.app;
-    this.settings = Object.assign({}, DEFAULT_SETTINGS2, plugin.settings.focus || {});
+  constructor() {
+    __publicField(this, "helperProc", null);
   }
   async start() {
-    try {
-      const dir = this.plugin.manifest && this.plugin.manifest.dir;
-      if (dir) {
-        const lp = import_path.default.join(dir, "helper.log");
-        if (import_fs.default.existsSync(lp) && import_fs.default.statSync(lp).size > 2 * 1024 * 1024) import_fs.default.writeFileSync(lp, "");
-      }
-    } catch (err) {
-    }
-    this.settings = Object.assign({}, DEFAULT_SETTINGS2, await (this.plugin.settings.focus || {}));
-    this.helperProc = null;
-    await this.startHelper();
-    this.plugin.registerEvent(
-      this.app.workspace.on("active-leaf-change", () => {
-        this.scheduleRestore("leaf-change");
-        if (this.settings.enableWheelWake) {
-          if (this._wakeTimer) window.clearTimeout(this._wakeTimer);
-          this._wakeTimer = window.setTimeout(() => this.wakeWheel(), 260);
-        }
-      })
-    );
-    this.plugin.registerEvent(
-      this.app.workspace.on("layout-change", () => this.scheduleRestore("layout-change"))
-    );
-    this.plugin.registerDomEvent(window, "focus", () => {
-      this.scheduleRestore("win-focus");
-      if (this.settings.enableWheelWake) {
-        if (this._wakeTimer) window.clearTimeout(this._wakeTimer);
-        this._wakeTimer = window.setTimeout(() => this.wakeWheel(), 260);
-      }
-    });
-    this.plugin.registerDomEvent(window, "keydown", (ev) => this.keyHandler(ev, "DOWN"), true);
-    this.plugin.registerDomEvent(window, "keyup", (ev) => this.keyHandler(ev, "UP"), true);
-    this.plugin.addCommand({
-      id: "toggle-pen-mouse-mode",
-      name: "\u5207\u6362\u7B14/\u9F20\u6807\u6A21\u5F0F\uFF08\u6EDA\u8F6E\u5524\u9192\uFF09",
-      callback: async () => {
-        const mode = await this.helperMode();
-        const next = mode === "pen" ? "mouse" : "pen";
-        await this.setHelperMode(next);
-        new import_obsidian2.Notice(`\u6EDA\u8F6E\u5524\u9192\uFF1A${next === "pen" ? "\u7B14\u6A21\u5F0F\uFF08\u4F1A\u642C\u5149\u6807\uFF09" : "\u9F20\u6807\u6A21\u5F0F\uFF08\u4E0D\u52A8\u5149\u6807\uFF09"}`);
-      }
-    });
-    this.plugin.addCommand({
-      id: "jiggle-now",
-      name: "\u624B\u52A8\u6296\u52A8\u5149\u6807\u4E00\u6B21",
-      callback: () => this.fetchHelper("/jiggle")
-    });
-    this.plugin.addCommand({
-      id: "restore-focus-now",
-      name: "\u7ACB\u5373\u6062\u590D\u753B\u5E03\u7126\u70B9",
-      callback: () => this.restoreFocus("manual")
-    });
-    this.addSettingTab(new CanvasFocusHelperSettingTab(this.app, this));
   }
-  onunload() {
-    this.stopHelper();
-  }
-  /* ---------------- 助手进程 ---------------- */
-  async startHelper() {
-    if (!this.settings.autoStartHelper) return;
-    const alive = await this.pingHelper();
-    if (alive) {
-      console.log("[\u7126\u70B9\u52A9\u624B] \u52A9\u624B\u5DF2\u5728\u8FD0\u884C\uFF0C\u590D\u7528");
-      return;
-    }
-    const scriptPath = import_path.default.join(this.plugin.manifest.dir || "", "helper.py");
-    const abs = this.plugin.manifest.dir ? import_path.default.join(this.app.vault.adapter.basePath, this.plugin.manifest.dir, "helper.py") : scriptPath;
-    if (!import_fs.default.existsSync(abs)) {
-      console.warn("[\u7126\u70B9\u52A9\u624B] \u627E\u4E0D\u5230 helper.py:", abs);
-      return;
-    }
-    if (!import_fs.default.existsSync(this.settings.helperPython)) {
-      console.warn("[\u7126\u70B9\u52A9\u624B] \u627E\u4E0D\u5230 pythonw:", this.settings.helperPython);
-      return;
-    }
-    try {
-      this.helperProc = (0, import_child_process.spawn)(this.settings.helperPython, [abs], {
-        cwd: import_path.default.dirname(abs),
-        windowsHide: true,
-        stdio: "ignore"
-      });
-      this.helperProc.on("exit", (code) => {
-        console.log("[\u7126\u70B9\u52A9\u624B] \u52A9\u624B\u9000\u51FA code=", code);
-        this.helperProc = null;
-      });
-      console.log("[\u7126\u70B9\u52A9\u624B] \u5DF2\u542F\u52A8\u52A9\u624B", abs);
-    } catch (e) {
-      console.error("[\u7126\u70B9\u52A9\u624B] \u542F\u52A8\u5931\u8D25", e);
-    }
-  }
-  stopHelper() {
-    if (this.helperProc) {
-      try {
-        this.helperProc.kill();
-      } catch (e) {
-      }
-      this.helperProc = null;
-    }
-  }
-  async pingHelper() {
-    try {
-      const r = await fetch(`http://127.0.0.1:${HELPER_PORT}/ping`, { cache: "no-store" });
-      return await r.text() === "pong";
-    } catch (e) {
-      return false;
-    }
-  }
-  async helperMode() {
-    try {
-      const r = await fetch(`http://127.0.0.1:${HELPER_PORT}/mode`, { cache: "no-store" });
-      return (await r.text()).trim();
-    } catch (e) {
-      return "unknown";
-    }
-  }
-  async setHelperMode(mode) {
-    try {
-      await fetch(`http://127.0.0.1:${HELPER_PORT}/mode?force=${mode}`, { cache: "no-store" });
-    } catch (e) {
-    }
-  }
-  fetchHelper(pathname) {
-    try {
-      fetch(`http://127.0.0.1:${HELPER_PORT}${pathname}`, { cache: "no-store" }).catch(() => {
-      });
-    } catch (e) {
-    }
-  }
-  /* ---------------- 滚轮唤醒 ---------------- */
-  wakeWheel() {
-    try {
-      const leaf = this.app.workspace.activeLeaf;
-      const view = leaf && leaf.view;
-      const el = view && view.containerEl;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      if (!r || r.width < 50 || r.height < 50) return;
-      const fx = (r.left + r.width / 2) / window.innerWidth;
-      const fy = (r.top + r.height / 2) / window.innerHeight;
-      const fw = r.width / window.innerWidth;
-      const fh = r.height / window.innerHeight;
-      this.fetchHelper(`/point?fx=${fx.toFixed(3)}&fy=${fy.toFixed(3)}&fw=${fw.toFixed(3)}&fh=${fh.toFixed(3)}`);
-    } catch (e) {
-    }
-  }
-  /* ---------------- 画布焦点 ---------------- */
-  scheduleRestore(reason) {
-    if (!this.settings.enableFocusFix) return;
-    [0, 80, 200, 450].forEach(
-      (ms) => window.setTimeout(() => this.restoreFocus(`${reason}+${ms}ms`), ms)
-    );
-  }
-  getWrapper() {
-    try {
-      const leaf = this.app.workspace.activeLeaf;
-      const view = leaf && leaf.view;
-      if (view && view.getViewType && view.getViewType() === "excalidraw") {
-        const w = view.containerEl.querySelector(".excalidraw-wrapper");
-        if (w) return w;
-      }
-    } catch (e) {
-    }
-    return document.querySelector(".workspace-leaf.mod-active .excalidraw-wrapper");
-  }
-  getCanvasTarget(wrapper) {
-    return wrapper && (wrapper.querySelector(".excalidraw.excalidraw-container") || wrapper.querySelector(".excalidraw") || wrapper.querySelector("canvas") || wrapper);
-  }
-  focusCanvas(wrapper) {
-    const target = this.getCanvasTarget(wrapper);
-    if (!target) return { target: null, ok: false };
-    try {
-      target.focus({ preventScroll: true });
-    } catch (e) {
-    }
-    const ok = target === document.activeElement || target.contains(document.activeElement);
-    return { target, ok };
-  }
-  isTyping(el) {
-    return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable === true);
-  }
-  restoreFocus(reason) {
-    try {
-      if (this.isTyping(document.activeElement)) return;
-      const wrapper = this.getWrapper();
-      if (!wrapper) return;
-      const canvasEl = wrapper.querySelector(".excalidraw.excalidraw-container");
-      if (canvasEl && canvasEl.contains(document.activeElement)) return;
-      const { ok } = this.focusCanvas(wrapper);
-      if (!ok) console.log("[\u7126\u70B9\u52A9\u624B] \u805A\u7126\u5931\u8D25", reason);
-    } catch (e) {
-    }
-  }
-  keyHandler(ev, phase) {
-    try {
-      if (ev.__focusHelperHandled) return;
-      if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
-      const wrapper = this.getWrapper();
-      if (!wrapper) return;
-      const canvasEl = wrapper.querySelector(".excalidraw.excalidraw-container");
-      if (canvasEl && canvasEl.contains(document.activeElement)) return;
-      if (this.isTyping(document.activeElement)) return;
-      const { target, ok } = this.focusCanvas(wrapper);
-      if (!ok) return;
-      ev.__focusHelperHandled = true;
-      ev.stopPropagation();
-      ev.preventDefault();
-      const clone = new KeyboardEvent(ev.type, {
-        key: ev.key,
-        code: ev.code,
-        location: ev.location,
-        repeat: ev.repeat,
-        altKey: ev.altKey,
-        ctrlKey: ev.ctrlKey,
-        metaKey: ev.metaKey,
-        shiftKey: ev.shiftKey,
-        bubbles: true,
-        cancelable: true,
-        composed: true
-      });
-      clone.__focusHelperHandled = true;
-      target.dispatchEvent(clone);
-    } catch (e) {
-    }
-  }
-};
-var CanvasFocusHelperSettingTab = class extends import_obsidian2.PluginSettingTab {
-  constructor(app, plugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-  display() {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.createEl("h3", { text: "\u753B\u5E03\u7126\u70B9\u4E0E\u6EDA\u8F6E\u52A9\u624B" });
-    new import_obsidian2.Setting(containerEl).setName("\u6062\u590D\u753B\u5E03\u952E\u76D8\u7126\u70B9").setDesc("\u5207\u56DE Excalidraw \u6807\u7B7E\u65F6\u81EA\u52A8\u628A\u7126\u70B9\u6253\u5230\u753B\u5E03\uFF0C\u5FEB\u6377\u952E\u7ACB\u523B\u53EF\u7528\u3002").addToggle(
-      (t) => t.setValue(this.plugin.settings.enableFocusFix).onChange(async (v) => {
-        this.plugin.settings.enableFocusFix = v;
-        await this.plugin.saveData(this.plugin.settings);
-      })
-    );
-    new import_obsidian2.Setting(containerEl).setName("\u5207\u6807\u7B7E\u65F6\u5524\u9192\u6EDA\u8F6E").setDesc("\u628A\u5149\u6807\u9001\u8FDB\u5185\u5BB9\u533A\u4E2D\u5FC3\uFF0C\u8BA9 TourBox \u65CB\u94AE\uFF08=\u9F20\u6807\u6EDA\u8F6E\uFF09\u7ACB\u523B\u53EF\u7528\u3002").addToggle(
-      (t) => t.setValue(this.plugin.settings.enableWheelWake).onChange(async (v) => {
-        this.plugin.settings.enableWheelWake = v;
-        await this.plugin.saveData(this.plugin.settings);
-      })
-    );
-    new import_obsidian2.Setting(containerEl).setName("\u5F53\u524D\u6EDA\u8F6E\u5524\u9192\u6A21\u5F0F").setDesc("\u7B14\u6A21\u5F0F\u4F1A\u642C\u52A8\u5149\u6807\uFF1B\u9F20\u6807\u6A21\u5F0F\u5B8C\u5168\u4E0D\u52A8\u5149\u6807\u3002").addButton(
-      (b) => b.setButtonText("\u5207\u6362\u5230\u7B14\u6A21\u5F0F").onClick(async () => {
-        await this.plugin.setHelperMode("pen");
-        new import_obsidian2.Notice("\u5DF2\u5207\u6362\u5230\u7B14\u6A21\u5F0F");
-      })
-    ).addButton(
-      (b) => b.setButtonText("\u5207\u6362\u5230\u9F20\u6807\u6A21\u5F0F").onClick(async () => {
-        await this.plugin.setHelperMode("mouse");
-        new import_obsidian2.Notice("\u5DF2\u5207\u6362\u5230\u9F20\u6807\u6A21\u5F0F");
-      })
-    );
-    new import_obsidian2.Setting(containerEl).setName("Python \u8DEF\u5F84\uFF08pythonw.exe\uFF09").setDesc("\u7528\u4E8E\u542F\u52A8 helper.py\u3002\u7559\u7A7A\u5219\u4E0D\u81EA\u52A8\u542F\u52A8\u3002").addText(
-      (t) => t.setValue(this.plugin.settings.helperPython).onChange(async (v) => {
-        this.plugin.settings.helperPython = v.trim();
-        await this.plugin.saveData(this.plugin.settings);
-      })
-    );
-    new import_obsidian2.Setting(containerEl).setName("\u968F Obsidian \u542F\u52A8\u52A9\u624B").setDesc("\u5173\u95ED\u540E\u9700\u8981\u624B\u52A8\u8FD0\u884C helper.py\u3002").addToggle(
-      (t) => t.setValue(this.plugin.settings.autoStartHelper).onChange(async (v) => {
-        this.plugin.settings.autoStartHelper = v;
-        await this.plugin.saveData(this.plugin.settings);
-      })
-    );
-    new import_obsidian2.Setting(containerEl).setName("\u52A9\u624B\u72B6\u6001").addButton(
-      (b) => b.setButtonText("\u68C0\u67E5").onClick(async () => {
-        const alive = await this.plugin.pingHelper();
-        const mode = await this.plugin.helperMode();
-        new import_obsidian2.Notice(alive ? `\u52A9\u624B\u8FD0\u884C\u4E2D\uFF0C\u6A21\u5F0F\uFF1A${mode}` : "\u52A9\u624B\u672A\u54CD\u5E94\uFF08\u68C0\u67E5 Python \u8DEF\u5F84\uFF09");
-      })
-    );
+  async stop() {
   }
 };
 
 // src/main.js
 var EXCALIDRAW_VIEW = "excalidraw";
-var ExcalidrawMinimapPlugin = class extends import_obsidian3.Plugin {
+var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
   async onload() {
     const saved = await this.loadData();
     this.settings = Object.assign({}, DEFAULT_SETTINGS, saved || {});
@@ -3245,7 +2952,7 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian3.Plugin {
         this._moduleErrors[name] = String(err && (err.message || err));
         if (name === "smooth" && this.smooth) this.smooth.enabled = false;
         if (name === "navigator") this.settings.navigatorEnabled = false;
-        new import_obsidian3.Notice("Excali \u753B\u5E03\u4F18\u5316\uFF1A" + name + " \u8FDE\u7EED\u51FA\u9519\uFF0C\u5DF2\u81EA\u52A8\u505C\u7528");
+        new import_obsidian2.Notice("Excali \u753B\u5E03\u4F18\u5316\uFF1A" + name + " \u8FDE\u7EED\u51FA\u9519\uFF0C\u5DF2\u81EA\u52A8\u505C\u7528");
       }
       return fallback;
     }
@@ -3318,7 +3025,7 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian3.Plugin {
     const leaf = this.activeLeaf();
     const view = leaf && leaf.view;
     if (!view || !view.getViewType || view.getViewType() !== EXCALIDRAW_VIEW) {
-      new import_obsidian3.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u5F20 Excalidraw \u753B\u5E03");
+      new import_obsidian2.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u5F20 Excalidraw \u753B\u5E03");
       return;
     }
     const showing = this.shouldShow(leaf);

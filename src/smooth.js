@@ -338,7 +338,10 @@ export class SmoothZoom {
     if (!this.enabled) return;
     if (ev.target && ev.target.closest && ev.target.closest(".emm-panel")) return; // 导航窗自己处理
     const view = this.view();
-    if (!view || !view.containerEl.contains(ev.target)) return;
+    if (!view) return;
+    // 笔模式（TourBox）：光标不一定要在画布上，否则滚轮会被路由到别的面板
+    const inView = view.containerEl.contains(ev.target);
+    if (!inView && this.settings.inputMode !== "pen") return;
     const api = view.excalidrawAPI;
     if (!api) return;
 

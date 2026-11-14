@@ -2,7 +2,7 @@ import { build } from "esbuild";
 
 const harness = process.argv.includes("--harness");
 const smoke = process.argv.includes("--smoke");
-const market = process.argv.includes("--market");
+const withHelper = process.argv.includes("--with-helper"); // 默认不带外部 Python
 
 const common = {
   bundle: true,
@@ -43,8 +43,8 @@ if (harness) {
   await build({
     ...common,
     entryPoints: ["src/main.js"],
-    outfile: market ? "dist-market/main.js" : "main.js",
-    plugins: market ? [marketStub] : [],
+    outfile: "main.js",
+    plugins: withHelper ? [] : [marketStub],
     format: "cjs",
     platform: "node",
     external: ["obsidian", "child_process", "fs", "path"],
