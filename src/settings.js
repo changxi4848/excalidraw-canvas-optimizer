@@ -116,12 +116,6 @@ export class MinimapSettingTab extends PluginSettingTab {
       );
 
     /* ---------------- 高级 ---------------- */
-    const adv = document.createElement("details");
-    adv.className = "exo-advanced";
-    const sum = document.createElement("summary");
-    sum.textContent = "高级选项";
-    adv.appendChild(sum);
-    containerEl.appendChild(adv);
 
     const hint = document.createElement("p");
     hint.className = "setting-item-description";
@@ -195,18 +189,19 @@ export class MinimapSettingTab extends PluginSettingTab {
       );
 
     const aboutLines = [
-      "Excali 画布优化  v1.0.1",
+      "Excali Canvas Optimizer（Excali 画布优化）  v1.0.1",
       "作者：卢长希  https://github.com/changxi4848",
-      "该插件是 Excalidraw 的第三方辅助优化插件，个人开发、随缘维护，仅支持 Windows 端。",
+      "Excalidraw 的第三方辅助优化插件，个人开发维护，仅供学习使用参考，仅支持 Windows 桌面端。",
       "",
-      "三个功能：导航小地图 + 缩放拖动性能优化 + 数位板体验优化。",
-      "导航小地图：操作很简单，自己试。",
-      "缩放拖动优化：取消了原版的全域实时刷新，改用更流畅的冻结方案。",
-      "数位板体验优化：笔模式下切换标签页时，把鼠标光标复位到画面中心，让缩放快捷键的中心正确。",
+      "两个功能：导航小地图 + 缩放/拖动性能优化。",
+      "导航小地图：缩略图只画色块与折线，几千笔画也能看清全局；切标签自动刷新，开关即时生效。",
+      "性能优化：缩放与拖动时冻结画面、只移动一张位图，停手后渲染一帧高清，避免每帧全量重绘。",
       "",
       "小地图手势：点击 = 把主画布移过去；拖亮色区 = 移动视口；拖暗色区 = 拖地图并设定标准位置；滚轮 = 缩放地图；Shift+拖 = 锁轴；双击 = 整张图。",
       "面板手势：拖三颗点 = 移动；拖右下角 = 改大小；◎ = 回正；底部横条 = 缩放地图（越靠边越精细）。",
-      "主画布缩放：Ctrl+滚轮 / 触摸板双指 / Ctrl± / Ctrl+0；拖动：空格+拖、中键拖、手型工具。",
+      "主画布缩放：Ctrl+滚轮 / 触摸板双指 / Ctrl+= 放大 / Ctrl+- 缩小 / Ctrl+0 复位（只在 Excalidraw 视图内拦截，不会缩放整个界面）。",
+      "主画布平移：Alt+方向键 / 空格+拖 / 中键拖 / 手型工具。",
+      "说明：光标不在画布上时，滚轮事件由 Obsidian 界面接收，插件收不到；因此 TourBox 等滚轮设备建议在驱动里映射成纯键盘按键（Ctrl+= / Ctrl+-）。",
     ];
     for (const line of aboutLines) {
       const p = document.createElement("p");
