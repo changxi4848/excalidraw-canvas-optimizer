@@ -2905,6 +2905,7 @@ var ExcalidrawMinimapPlugin = class extends import_obsidian2.Plugin {
       panel.invalidate();
     }
     this.safe("tick", () => this.tickAll());
+    this.safe("navigator", () => this.sync());
   }
   /* --------------------------------------------------------- 面板生命周期 */
   scheduleSync() {

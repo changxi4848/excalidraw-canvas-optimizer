@@ -173,6 +173,7 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
       panel.invalidate();
     }
     this.safe("tick", () => this.tickAll());
+    this.safe("navigator", () => this.sync());
   }
 
   /* --------------------------------------------------------- 面板生命周期 */
