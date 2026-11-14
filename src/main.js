@@ -86,7 +86,17 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
       this.scheduleSync();
       const leaf = this.app.workspace.activeLeaf;
       const v = leaf && leaf.view;
-      if (v && v.getViewType && v.getViewType() === EXCALIDRAW_VIEW) this.suppressHints(v);
+      if (v && v.getViewType && v.getViewType() === EXCALIDRAW_VIEW) {
+        this.suppressHints(v);
+        // Excalidraw 切标签时会重建 appState，300ms 后再确认一次
+        if (this._hintTimer) window.clearTimeout(this._hintTimer);
+        this._hintTimer = window.setTimeout(() => {
+          this._hintTimer = null;
+          const leaf2 = this.app.workspace.activeLeaf;
+          const v2 = leaf2 && leaf2.view;
+          if (v2 && v2.getViewType && v2.getViewType() === EXCALIDRAW_VIEW) this.suppressHints(v2);
+        }, 300);
+      }
     }));
     this.registerEvent(this.app.workspace.on("file-open", () => this.scheduleSync()));
     this.register(() => {
