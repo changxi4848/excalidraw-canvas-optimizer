@@ -1854,7 +1854,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u5B9A\u4E2D\u5FC3 + \u5168\u5C40\u6EDA\u52A8\u7F29\u653E").setDesc("\u4F7F\u7528\u6570\u4F4D\u677F\u65F6\u5F3A\u70C8\u5EFA\u8BAE\u5F00\u542F\uFF0C\u5426\u5219\u5207\u6362\u6807\u7B7E\u9875\u540E\u5BB9\u6613\u51FA\u73B0\u7F29\u653E\u5931\u7075\u3002\u5F00\u542F\u540E\uFF1A\u7F29\u653E\u59CB\u7EC8\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\uFF1B\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\uFF08\u6807\u7B7E\u680F\u3001\u4FA7\u8FB9\u680F\uFF09\u65F6\u6EDA\u8F6E\u4E5F\u80FD\u7F29\u653E\u3002\u5173\u95ED\u5219\u6062\u590D\u9F20\u6807\u539F\u751F\u884C\u4E3A\u3002").addToggle(
+    new import_obsidian.Setting(containerEl).setName("\u7F29\u653E\u951A\u5B9A\u4E2D\u5FC3 + \u5168\u5C40\u6EDA\u52A8\u7F29\u653E").setDesc("\u5F00\u542F\u540E\u7F29\u653E\u59CB\u7EC8\u56F4\u7ED5\u753B\u5E03\u4E2D\u5FC3\u3002TourBox \u8FD9\u7C7B\u6EDA\u8F6E\u8BBE\u5907\u5EFA\u8BAE\u5728\u9A71\u52A8\u91CC\u628A\u5B83\u6620\u5C04\u6210\u7EAF\u952E\u76D8\u6309\u952E\uFF08Ctrl+= \u653E\u5927\u3001Ctrl+- \u7F29\u5C0F\u3001Ctrl+0 \u590D\u4F4D\uFF09\uFF0C\u56E0\u4E3A\u5149\u6807\u4E0D\u5728\u753B\u5E03\u4E0A\u65F6\u6EDA\u8F6E\u4E8B\u4EF6\u4E0D\u4F1A\u4F20\u7ED9\u753B\u5E03\uFF0C\u4EFB\u4F55\u63D2\u4EF6\u90FD\u63A5\u4E0D\u5230\u3002").addToggle(
       (t) => t.setValue(this.plugin.settings.centerAnchor !== false).onChange(async (v) => {
         this.plugin.settings.centerAnchor = v;
         await this.plugin.saveSettingsAndSync();
@@ -1892,66 +1892,6 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
     hint.className = "setting-item-description";
     hint.textContent = "\u4F4D\u7F6E\u3001\u5927\u5C0F\u3001\u5730\u56FE\u6BD4\u4F8B\u4E0D\u5728\u8FD9\u91CC\u8C03\uFF1A\u76F4\u63A5\u62D6\u9762\u677F\u9876\u90E8\u7684\u4E09\u9897\u70B9\u79FB\u52A8\u3001\u62D6\u53F3\u4E0B\u89D2\u659C\u7EB9\u6539\u5927\u5C0F\u3001\u6EDA\u8F6E\u6216\u7528\u5E95\u90E8\u6A2A\u6761\u6539\u6BD4\u4F8B\u3002";
     adv.appendChild(hint);
-    new import_obsidian.Setting(adv).setName("\u81EA\u52A8\u663E\u793A\u5C0F\u5730\u56FE").setDesc("\u6253\u5F00 Excalidraw \u753B\u5E03\u65F6\u81EA\u52A8\u51FA\u73B0\uFF1B\u5173\u6389\u540E\u9700\u624B\u52A8\u5524\u51FA\u3002").addToggle(
-      (t) => t.setValue(s.autoShow).onChange(async (v) => {
-        s.autoShow = v;
-        await this.plugin.saveSettingsAndSync();
-      })
-    );
-    new import_obsidian.Setting(adv).setName("\u538B\u6697\u89C6\u53E3\u4EE5\u5916\u533A\u57DF").setDesc("\u4E00\u773C\u770B\u51FA\u5F53\u524D\u5C4F\u5E55\u770B\u5230\u7684\u662F\u6574\u5F20\u56FE\u7684\u54EA\u4E00\u5757\u3002").addToggle(
-      (t) => t.setValue(s.dimOutside).onChange(async (v) => {
-        s.dimOutside = v;
-        await this.plugin.saveSettingsAndSync();
-      })
-    );
-    new import_obsidian.Setting(adv).setName("\u9AD8\u4EAE\u9009\u4E2D\u7684\u5143\u7D20").setDesc("\u5728\u5C0F\u5730\u56FE\u4E0A\u7ED9\u9009\u4E2D\u7684\u5143\u7D20\u63CF\u4E00\u5708\u84DD\u8FB9\u3002").addToggle(
-      (t) => t.setValue(s.highlightSelection).onChange(async (v) => {
-        s.highlightSelection = v;
-        await this.plugin.saveSettingsAndSync();
-      })
-    );
-    new import_obsidian.Setting(adv).setName("\u53EA\u753B\u8F6E\u5ED3").setDesc("\u4E0D\u586B\u8272\u53EA\u63CF\u8FB9\uFF0C\u5143\u7D20\u7279\u522B\u591A\u3001\u673A\u5668\u5403\u529B\u65F6\u6700\u7701\u3002").addToggle(
-      (t) => t.setValue(s.outlineOnly).onChange(async (v) => {
-        s.outlineOnly = v;
-        await this.plugin.saveSettingsAndSync();
-      })
-    );
-    new import_obsidian.Setting(adv).setName("\u663E\u793A\u7F29\u653E\u767E\u5206\u6BD4").setDesc("\u5C0F\u5730\u56FE\u5DE6\u4E0A\u89D2\u663E\u793A\u5730\u56FE\u6BD4\u4F8B\u3002").addToggle(
-      (t) => t.setValue(s.showZoomBadge).onChange(async (v) => {
-        s.showZoomBadge = v;
-        await this.plugin.saveSettingsAndSync();
-      })
-    );
-    new import_obsidian.Setting(adv).setName("\u9762\u677F\u900F\u660E\u5EA6").setDesc("\u5C0F\u5730\u56FE\u7684\u4E0D\u900F\u660E\u5EA6\uFF0C\u6321\u5230\u5185\u5BB9\u65F6\u53EF\u4EE5\u8C03\u4F4E\u3002").addSlider(
-      (sl) => sl.setLimits(0.4, 1, 0.02).setValue(s.opacity).setDynamicTooltip().onChange(async (v) => {
-        s.opacity = v;
-        await this.plugin.saveSettingsAndSync();
-      })
-    );
-    new import_obsidian.Setting(adv).setName("\u624B\u7ED8\u91C7\u6837\u70B9\u6570").setDesc("\u6BCF\u6761\u624B\u7ED8\u5728\u5C0F\u5730\u56FE\u4E0A\u6700\u591A\u753B\u51E0\u4E2A\u70B9\uFF08\u9ED8\u8BA4 48\uFF09\u3002\u8C03\u5C0F\u66F4\u7701\u3002").addSlider(
-      (sl) => sl.setLimits(8, 160, 4).setValue(s.maxFreedrawPoints).setDynamicTooltip().onChange(async (v) => {
-        s.maxFreedrawPoints = v;
-        await this.plugin.saveSettingsAndSync();
-      })
-    );
-    new import_obsidian.Setting(adv).setName("\u5237\u65B0\u95F4\u9694").setDesc("\u9ED8\u8BA4 250 \u6BEB\u79D2\uFF1B\u4E3B\u753B\u5E03\u79FB\u52A8\u65F6\u4F1A\u81EA\u52A8\u63D0\u5230 60 \u6BEB\u79D2\u8DDF\u968F\u3002").addSlider(
-      (sl) => sl.setLimits(60, 600, 10).setValue(s.tickMs).setDynamicTooltip().onChange(async (v) => {
-        s.tickMs = v;
-        await this.plugin.saveSettingsAndSync();
-      })
-    );
-    new import_obsidian.Setting(adv).setName("\u6062\u590D\u9ED8\u8BA4\u4F4D\u7F6E\u548C\u5927\u5C0F").setDesc("\u653E\u56DE\u53F3\u4E0B\u89D2\u3001\u5C3A\u5BF8\u56DE\u5230 292\xD7210\u3002").addButton(
-      (b) => b.setButtonText("\u91CD\u7F6E").onClick(async () => {
-        s.corner = "br";
-        s.freeLeft = null;
-        s.freeTop = null;
-        s.width = 292;
-        s.height = 210;
-        await this.plugin.saveSettingsAndSync();
-        this.display();
-      })
-    );
-    containerEl.createEl("h3", { text: "\u5173\u4E8E" });
     new import_obsidian.Setting(containerEl).setName("\u68C0\u6D4B\u66F4\u65B0").setDesc("\u4ECE GitHub \u68C0\u67E5\u662F\u5426\u6709\u65B0\u7248\u672C\uFF08\u5F53\u524D v" + this.plugin.manifest.version + "\uFF09").addButton(
       (b) => b.setButtonText("\u68C0\u6D4B").onClick(async () => {
         const cur = this.plugin.manifest.version;
@@ -2147,8 +2087,8 @@ var SmoothZoom = class {
       elementCount: (st.__els || api.getSceneElements() || []).length,
       scrollX: baseScrollX,
       scrollY: baseScrollY,
-      ax: this._anchorPx && this._anchorCenter === false ? this._anchorPx.x : rect.width / 2,
-      ay: this._anchorPx && this._anchorCenter === false ? this._anchorPx.y : rect.height / 2,
+      ax: ev && this._anchorCenter === false ? ev.clientX - rect.left : rect.width / 2,
+      ay: ev && this._anchorCenter === false ? ev.clientY - rect.top : rect.height / 2,
       startClientX: ev ? ev.clientX : 0,
       startClientY: ev ? ev.clientY : 0
     };
@@ -2320,40 +2260,16 @@ var SmoothZoom = class {
     this.watchdog = setTimeout(() => this.commit(), WATCHDOG_MS);
   }
   /* ------------------------------------------------------------ 交互 */
-  trackPointer() {
-    if (this._ptrBound) return;
-    this._ptrBound = true;
-    this._lastPointer = "mouse";
-    const onMove = (e) => {
-      if (e.pointerType === "pen") {
-        this._lastPointer = "pen";
-        this._penX = e.clientX;
-        this._penY = e.clientY;
-      } else if (e.pointerType === "mouse") {
-        this._lastPointer = "mouse";
-      }
-    };
-    this.plugin.registerDomEvent(window, "pointermove", onMove, { capture: true, passive: true });
-    this.plugin.registerDomEvent(window, "pointerdown", onMove, { capture: true, passive: true });
-  }
   onWheel(ev) {
-    this.trackPointer();
     if (!this.enabled) return;
     if (ev.target && ev.target.closest && ev.target.closest(".emm-panel")) return;
     const view = this.view();
     if (!view) return;
     const api = view.excalidrawAPI;
     if (!api) return;
-    const box = view.containerEl.getBoundingClientRect();
-    const penMode = this._lastPointer === "pen" && this._penX != null;
-    const px = penMode ? this._penX : ev.clientX;
-    const py = penMode ? this._penY : ev.clientY;
-    const inView = px >= box.left && px <= box.right && py >= box.top && py <= box.bottom;
-    this._anchorPx = { x: px - box.left, y: py - box.top };
-    const centerMode = this.settings.centerAnchor !== false;
-    if (!inView && !(penMode && centerMode)) return;
-    this._anchorCenter = penMode ? centerMode : false;
-    const zoomGesture = penMode ? true : ev.ctrlKey || ev.metaKey;
+    if (!view.containerEl.contains(ev.target)) return;
+    this._anchorCenter = this.settings.centerAnchor !== false;
+    const zoomGesture = ev.ctrlKey || ev.metaKey;
     if (!this.session && !this.begin(view, api, zoomGesture ? "zoom" : "pan", ev)) return;
     const s = this.session;
     if (!s) return;

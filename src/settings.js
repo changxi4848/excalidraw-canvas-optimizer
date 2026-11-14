@@ -69,7 +69,7 @@ export class MinimapSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("缩放锚定中心 + 全局滚动缩放")
-      .setDesc("使用数位板时强烈建议开启，否则切换标签页后容易出现缩放失灵。开启后：缩放始终围绕画布中心；光标不在画布上（标签栏、侧边栏）时滚轮也能缩放。关闭则恢复鼠标原生行为。")
+      .setDesc("开启后缩放始终围绕画布中心。TourBox 这类滚轮设备建议在驱动里把它映射成纯键盘按键（Ctrl+= 放大、Ctrl+- 缩小、Ctrl+0 复位），因为光标不在画布上时滚轮事件不会传给画布，任何插件都接不到。")
       .addToggle((t) =>
         t.setValue(this.plugin.settings.centerAnchor !== false).onChange(async (v) => {
           this.plugin.settings.centerAnchor = v;
@@ -128,116 +128,6 @@ export class MinimapSettingTab extends PluginSettingTab {
     hint.textContent =
       "位置、大小、地图比例不在这里调：直接拖面板顶部的三颗点移动、拖右下角斜纹改大小、滚轮或用底部横条改比例。";
     adv.appendChild(hint);
-
-    new Setting(adv)
-      .setName("自动显示小地图")
-      .setDesc("打开 Excalidraw 画布时自动出现；关掉后需手动唤出。")
-      .addToggle((t) =>
-        t.setValue(s.autoShow).onChange(async (v) => {
-          s.autoShow = v;
-          await this.plugin.saveSettingsAndSync();
-        })
-      );
-
-    new Setting(adv)
-      .setName("压暗视口以外区域")
-      .setDesc("一眼看出当前屏幕看到的是整张图的哪一块。")
-      .addToggle((t) =>
-        t.setValue(s.dimOutside).onChange(async (v) => {
-          s.dimOutside = v;
-          await this.plugin.saveSettingsAndSync();
-        })
-      );
-
-    new Setting(adv)
-      .setName("高亮选中的元素")
-      .setDesc("在小地图上给选中的元素描一圈蓝边。")
-      .addToggle((t) =>
-        t.setValue(s.highlightSelection).onChange(async (v) => {
-          s.highlightSelection = v;
-          await this.plugin.saveSettingsAndSync();
-        })
-      );
-
-    new Setting(adv)
-      .setName("只画轮廓")
-      .setDesc("不填色只描边，元素特别多、机器吃力时最省。")
-      .addToggle((t) =>
-        t.setValue(s.outlineOnly).onChange(async (v) => {
-          s.outlineOnly = v;
-          await this.plugin.saveSettingsAndSync();
-        })
-      );
-
-    new Setting(adv)
-      .setName("显示缩放百分比")
-      .setDesc("小地图左上角显示地图比例。")
-      .addToggle((t) =>
-        t.setValue(s.showZoomBadge).onChange(async (v) => {
-          s.showZoomBadge = v;
-          await this.plugin.saveSettingsAndSync();
-        })
-      );
-
-    new Setting(adv)
-      .setName("面板透明度")
-      .setDesc("小地图的不透明度，挡到内容时可以调低。")
-      .addSlider((sl) =>
-        sl
-          .setLimits(0.4, 1, 0.02)
-          .setValue(s.opacity)
-          .setDynamicTooltip()
-          .onChange(async (v) => {
-            s.opacity = v;
-            await this.plugin.saveSettingsAndSync();
-          })
-      );
-
-    new Setting(adv)
-      .setName("手绘采样点数")
-      .setDesc("每条手绘在小地图上最多画几个点（默认 48）。调小更省。")
-      .addSlider((sl) =>
-        sl
-          .setLimits(8, 160, 4)
-          .setValue(s.maxFreedrawPoints)
-          .setDynamicTooltip()
-          .onChange(async (v) => {
-            s.maxFreedrawPoints = v;
-            await this.plugin.saveSettingsAndSync();
-          })
-      );
-
-    new Setting(adv)
-      .setName("刷新间隔")
-      .setDesc("默认 250 毫秒；主画布移动时会自动提到 60 毫秒跟随。")
-      .addSlider((sl) =>
-        sl
-          .setLimits(60, 600, 10)
-          .setValue(s.tickMs)
-          .setDynamicTooltip()
-          .onChange(async (v) => {
-            s.tickMs = v;
-            await this.plugin.saveSettingsAndSync();
-          })
-      );
-
-    new Setting(adv)
-      .setName("恢复默认位置和大小")
-      .setDesc("放回右下角、尺寸回到 292×210。")
-      .addButton((b) =>
-        b.setButtonText("重置").onClick(async () => {
-          s.corner = "br";
-          s.freeLeft = null;
-          s.freeTop = null;
-          s.width = 292;
-          s.height = 210;
-          await this.plugin.saveSettingsAndSync();
-          this.display();
-        })
-      );
-
-    /* ---------------- 关于 ---------------- */
-    containerEl.createEl("h3", { text: "关于" });
 
     new Setting(containerEl)
       .setName("检测更新")
