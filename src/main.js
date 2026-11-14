@@ -12,7 +12,6 @@ import { clamp, scrollToPinScenePoint, viewportSizeOf, zoomOf } from "./geometry
 import { MinimapPanel } from "./panel.js";
 import { DEFAULT_SETTINGS, MinimapSettingTab } from "./settings.js";
 import { SmoothZoom } from "./smooth.js";
-import { FocusHelper } from "./focus.js";
 
 const EXCALIDRAW_VIEW = "excalidraw";
 
@@ -44,10 +43,6 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
     this._moduleErrors = {};
 
     this.smooth = new SmoothZoom(this);
-    this.focus = new FocusHelper(this);
-    if (this.settings.inputMode === "pen") {
-      try { await this.focus.start(); } catch (err) { this._moduleErrors.focus = String(err && (err.message || err)); console.warn("[optimizer] 笔模式助手启用失败", err); }
-    }
     this.smooth.enabled = this.settings.smoothEnabled !== false;
     try {
       this.smooth.start();
@@ -98,7 +93,6 @@ export default class ExcalidrawMinimapPlugin extends Plugin {
   onunload() {
     if (this._pendingTimer) { clearInterval(this._pendingTimer); this._pendingTimer = null; }
     this.pending.clear();
-    if (this.focus) { try { this.focus.stop(); } catch (err) { /* ignore */ } }
     if (this.smooth) this.smooth.stop();
     for (const panel of this.panels.values()) panel.unmount();
     this.panels.clear();
