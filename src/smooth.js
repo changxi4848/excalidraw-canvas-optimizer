@@ -1,5 +1,7 @@
 
 const MIN_ZOOM = 0.1;
+/** 非画布界面（PDF 等）每次按键的滚轮增量：PDF 缩放是档位式的，30 恰好一格 */
+const NONCANVAS_ZOOM_DELTA = 30;
 const MAX_ZOOM = 30;
 /** 停手后多久提交（毫秒） */
 const SETTLE_MS = 260;
@@ -486,7 +488,7 @@ export class SmoothZoom {
       const y = box.top + box.height / 2;
       const target = document.elementFromPoint(x, y) || root;
       target.dispatchEvent(
-        new WheelEvent("wheel", { deltaY: dir > 0 ? -120 : 120, ctrlKey: true, clientX: x, clientY: y, bubbles: true, cancelable: true })
+        new WheelEvent("wheel", { deltaY: dir > 0 ? -NONCANVAS_ZOOM_DELTA : NONCANVAS_ZOOM_DELTA, ctrlKey: true, clientX: x, clientY: y, bubbles: true, cancelable: true })
       );
       return true;
     } catch (err) {

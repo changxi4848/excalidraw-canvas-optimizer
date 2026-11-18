@@ -2043,6 +2043,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
 
 // src/smooth.js
 var MIN_ZOOM2 = 0.1;
+var NONCANVAS_ZOOM_DELTA = 30;
 var MAX_ZOOM2 = 30;
 var SETTLE_MS = 260;
 var WATCHDOG_MS = 3e3;
@@ -2490,7 +2491,7 @@ var SmoothZoom = class {
       const y = box.top + box.height / 2;
       const target = document.elementFromPoint(x, y) || root;
       target.dispatchEvent(
-        new WheelEvent("wheel", { deltaY: dir > 0 ? -120 : 120, ctrlKey: true, clientX: x, clientY: y, bubbles: true, cancelable: true })
+        new WheelEvent("wheel", { deltaY: dir > 0 ? -NONCANVAS_ZOOM_DELTA : NONCANVAS_ZOOM_DELTA, ctrlKey: true, clientX: x, clientY: y, bubbles: true, cancelable: true })
       );
       return true;
     } catch (err) {
