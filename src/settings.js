@@ -189,11 +189,11 @@ export class MinimapSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName(L("全局接管缩放/平移快捷键", "Global zoom & pan shortcuts"))
+      .setName(L("全局快捷键：缩放 / 滚动", "Global shortcuts: zoom / scroll"))
       .setDesc(
         L(
-          "在非 Excalidraw 界面（普通笔记、关系图等）也接管 Ctrl+= / Ctrl+- / Ctrl+0 与 Alt+方向键：有可见的 Excalidraw 画布时直接操作那块画布，没有时仅阻止整个 Obsidian 界面被缩放。Excalidraw 画布内始终生效，不受此开关影响。注意：开启后 Alt+左右键可能不再用于前进/后退。",
-          "Also handle Ctrl+= / Ctrl+- / Ctrl+0 and Alt+arrows outside Excalidraw views: if an Excalidraw canvas is visible it is zoomed/panned directly; otherwise the keys are simply blocked so the Obsidian UI is not zoomed. Inside an Excalidraw view these keys always work, regardless of this toggle. Note: Alt+Left/Right may no longer navigate back/forward."
+          "在非 Excalidraw 界面也启用这些快捷键：Alt+方向键像滚轮一样上下滚动当前界面（PDF、笔记都能用），Ctrl+= / Ctrl+- 对支持缩放的界面生效（如 PDF），Ctrl+0 复位。Excalidraw 画布内始终生效，不受此开关影响。注意：开启后 Alt+左右键可能不再用于前进/后退。",
+          "Also enable these keys outside Excalidraw views: Alt+arrows scroll the current view like a wheel (works in PDFs and notes), Ctrl+= / Ctrl+- zoom views that support it (e.g. PDF), Ctrl+0 resets. Inside an Excalidraw view they always work, regardless of this toggle. Note: Alt+Left/Right may no longer navigate back/forward."
         )
       )
       .addToggle((t) =>
@@ -280,6 +280,7 @@ export class MinimapSettingTab extends PluginSettingTab {
         "面板手势：拖三颗点 = 移动；拖右下角 = 改大小；◎ = 回正；底部横条 = 缩放地图（越靠边越精细）。",
         "主画布缩放：Ctrl+滚轮 / 触摸板双指 / Ctrl+= 放大 / Ctrl+- 缩小 / Ctrl+0 复位。",
         "主画布平移：Alt+方向键 / 空格+拖 / 中键拖 / 手型工具。",
+        "全局：Alt+方向键在 PDF / 笔记等界面等同滚轮上下滚；Ctrl+= / Ctrl+- 对支持缩放的界面生效（如 PDF）。",
       ],
       [
         "Excali Canvas Optimizer  v" + this.plugin.manifest.version,
@@ -294,6 +295,7 @@ export class MinimapSettingTab extends PluginSettingTab {
         "Panel: drag the three dots = move; drag the bottom-right corner = resize; ◎ = recenter; bottom bar = zoom the map (finer towards the edges).",
         "Canvas zoom: Ctrl+wheel / trackpad pinch / Ctrl+= / Ctrl+- / Ctrl+0.",
         "Canvas pan: Alt+arrow keys / Space+drag / middle-drag / hand tool.",
+        "Global: Alt+arrows scroll PDFs and notes like a wheel; Ctrl+= / Ctrl+- zoom views that support it (e.g. PDF).",
       ]
     );
 

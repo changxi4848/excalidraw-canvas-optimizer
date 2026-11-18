@@ -445,80 +445,134 @@ export class SmoothZoom {
     }
   }
 
-  /** Alt + 方向键：平移画布（活动标签不是画布时也会作用到可见画布） */
+  /** 活动视图里最近的可滚动元素（PDF、Markdown、列表等） */
+  scrollableOf(view) {
+    const root = view && view.containerEl;
+    if (!root) return null;
+    const cands = [
+      root.querySelector(".cm-scroller"),
+      root.querySelector(".pdf-viewer-container"),
+      root.querySelector(".markdown-preview-view"),
+      root.querySelector(".view-content"),
+      root,
+    ].filter(Boolean);
+    for (const el of cands) {
+      if (el.scrollHeight > el.clientHeight + 4 || el.scrollWidth > el.clientWidth + 4) return el;
+    }
+    return cands[0] || null;
+  }
+
+  /** 用按键滚动活动视图（替代滚轮上下滚） */
+  scrollActiveView(dx, dy) {
+    try {
+      const leaf = this.app.workspace.activeLeaf;
+      const el = this.scrollableOf(leaf && leaf.view);
+      if (!el) return false;
+      el.scrollBy({ left: dx, top: dy, behavior: "instant" });
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  /** 用合成的 Ctrl+滚轮缩放活动视图（PDF 等原生支持） */
+  zoomActiveView(dir) {
+    try {
+      const leaf = this.app.workspace.activeLeaf;
+      const root = leaf && leaf.view && leaf.view.containerEl;
+      if (!root) return false;
+      const box = root.getBoundingClientRect();
+      const x = box.left + box.width / 2;
+      const y = box.top + box.height / 2;
+      const target = document.elementFromPoint(x, y) || root;
+      target.dispatchEvent(
+        new WheelEvent("wheel", { deltaY: dir > 0 ? -120 : 120, ctrlKey: true, clientX: x, clientY: y, bubbles: true, cancelable: true })
+      );
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  /** Alt + 方向键：画布内平移；其它界面像滚轮一样滚动（PDF、笔记等都能用） */
   onPanKey(ev) {
     if (!this.enabled) return;
     if (!ev.altKey || ev.ctrlKey || ev.metaKey) return;
     const dirs = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [1, 0], ArrowRight: [-1, 0] };
     const d = dirs[ev.key];
     if (!d) return;
-    const view = this.targetView();
-    const api = view && view.excalidrawAPI;
-    if (!api) {
-      if (this.blockOutside()) {
-        ev.preventDefault();
-        ev.stopPropagation();
+    const active = this.activeView();
+    if (active) {
+      const api = active.excalidrawAPI;
+      if (!api) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!this.session && !this.begin(active, api, "pan", null)) {
+        const z = (api.getAppState().zoom && api.getAppState().zoom.value) || 1;
+        this.directPan(api, (d[0] * 60) / z, (d[1] * 60) / z);
+        return;
       }
+      const s = this.session;
+      if (!s) return;
+      const step = 60 / (s.drawZoom || s.zoom);
+      s.scrollX += d[0] * step;
+      s.scrollY += d[1] * step;
+      this.applyTransform();
+      this.armWatchdog();
+      this.schedule();
       return;
     }
+    // 非画布界面：像滚轮一样滚动（每次 120px）
+    if (!this.blockOutside()) return;
     ev.preventDefault();
     ev.stopPropagation();
-    if (!this.session && !this.begin(view, api, "pan", null)) {
-      const z = (api.getAppState().zoom && api.getAppState().zoom.value) || 1;
-      this.directPan(api, (d[0] * 60) / z, (d[1] * 60) / z);
-      return;
-    }
-    const s = this.session;
-    if (!s) return;
-    const step = 60 / (s.drawZoom || s.zoom); // 每按一次约 60 屏幕像素，接近滚轮一格
-    s.scrollX += d[0] * step;
-    s.scrollY += d[1] * step;
-    this.applyTransform();
-    this.armWatchdog();
-    this.schedule();
+    this.scrollActiveView(-d[0] * 120, -d[1] * 120);
   }
 
-  /** Ctrl/⌘ + = / - / 0：缩放画布（活动标签不是画布时也会作用到可见画布） */
+  /** Ctrl/⌘ + = / - / 0：画布内缩放画布；其它界面用 Ctrl+滚轮缩放（PDF 支持） */
   onZoomKey(ev) {
     if (!this.enabled) return;
     if (!(ev.ctrlKey || ev.metaKey)) return;
     const k = ev.key;
     if (k !== "=" && k !== "+" && k !== "-" && k !== "0") return;
-    const view = this.targetView();
-    const api = view && view.excalidrawAPI;
-    if (!api) {
-      if (this.blockOutside()) {
-        ev.preventDefault();
-        ev.stopPropagation();
+    const active = this.activeView();
+    if (active) {
+      const api = active.excalidrawAPI;
+      if (!api) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!this.session && !this.begin(active, api, "zoom", null)) {
+        this.directZoom(api, k);
+        return;
       }
+      const s = this.session;
+      if (!s) return;
+      const st = api.getAppState();
+      const offL = Number(st.offsetLeft) || 0;
+      const offT = Number(st.offsetTop) || 0;
+      const ax = s.rect.width / 2;
+      const ay = s.rect.height / 2;
+      const wx = (ax - offL) / s.zoom - s.scrollX;
+      const wy = (ay - offT) / s.zoom - s.scrollY;
+      let next = s.zoom;
+      if (k === "0") next = 1;
+      else if (k === "-") next = s.zoom / 1.15;
+      else next = s.zoom * 1.15;
+      next = Math.min(30, Math.max(0.1, next));
+      s.zoom = next;
+      s.scrollX = (ax - offL) / next - wx;
+      s.scrollY = (ay - offT) / next - wy;
+      this.applyTransform();
+      this.armWatchdog();
+      this.schedule();
       return;
     }
+    // 非画布界面：交给 Ctrl+滚轮（PDF 等原生支持；不支持的界面就什么也不发生）
+    if (!this.blockOutside()) return;
     ev.preventDefault();
     ev.stopPropagation();
-    if (!this.session && !this.begin(view, api, "zoom", null)) {
-      this.directZoom(api, k);
-      return;
-    }
-    const s = this.session;
-    if (!s) return;
-    const st = api.getAppState();
-    const offL = Number(st.offsetLeft) || 0;
-    const offT = Number(st.offsetTop) || 0;
-    const ax = s.rect.width / 2;
-    const ay = s.rect.height / 2;
-    const wx = (ax - offL) / s.zoom - s.scrollX;
-    const wy = (ay - offT) / s.zoom - s.scrollY;
-    let next = s.zoom;
-    if (k === "0") next = 1;
-    else if (k === "-") next = s.zoom / 1.15;
-    else next = s.zoom * 1.15;
-    next = Math.min(30, Math.max(0.1, next));
-    s.zoom = next;
-    s.scrollX = (ax - offL) / next - wx;
-    s.scrollY = (ay - offT) / next - wy;
-    this.applyTransform();
-    this.armWatchdog();
-    this.schedule();
+    if (k === "0") return;
+    this.zoomActiveView(k === "-" ? -1 : 1);
   }
 
   /** 空格按下就冻结：用户必然是先按空格再拖 */

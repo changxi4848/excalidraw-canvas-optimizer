@@ -1939,10 +1939,10 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName(L("\u5168\u5C40\u63A5\u7BA1\u7F29\u653E/\u5E73\u79FB\u5FEB\u6377\u952E", "Global zoom & pan shortcuts")).setDesc(
+    new import_obsidian.Setting(containerEl).setName(L("\u5168\u5C40\u5FEB\u6377\u952E\uFF1A\u7F29\u653E / \u6EDA\u52A8", "Global shortcuts: zoom / scroll")).setDesc(
       L(
-        "\u5728\u975E Excalidraw \u754C\u9762\uFF08\u666E\u901A\u7B14\u8BB0\u3001\u5173\u7CFB\u56FE\u7B49\uFF09\u4E5F\u63A5\u7BA1 Ctrl+= / Ctrl+- / Ctrl+0 \u4E0E Alt+\u65B9\u5411\u952E\uFF1A\u6709\u53EF\u89C1\u7684 Excalidraw \u753B\u5E03\u65F6\u76F4\u63A5\u64CD\u4F5C\u90A3\u5757\u753B\u5E03\uFF0C\u6CA1\u6709\u65F6\u4EC5\u963B\u6B62\u6574\u4E2A Obsidian \u754C\u9762\u88AB\u7F29\u653E\u3002Excalidraw \u753B\u5E03\u5185\u59CB\u7EC8\u751F\u6548\uFF0C\u4E0D\u53D7\u6B64\u5F00\u5173\u5F71\u54CD\u3002\u6CE8\u610F\uFF1A\u5F00\u542F\u540E Alt+\u5DE6\u53F3\u952E\u53EF\u80FD\u4E0D\u518D\u7528\u4E8E\u524D\u8FDB/\u540E\u9000\u3002",
-        "Also handle Ctrl+= / Ctrl+- / Ctrl+0 and Alt+arrows outside Excalidraw views: if an Excalidraw canvas is visible it is zoomed/panned directly; otherwise the keys are simply blocked so the Obsidian UI is not zoomed. Inside an Excalidraw view these keys always work, regardless of this toggle. Note: Alt+Left/Right may no longer navigate back/forward."
+        "\u5728\u975E Excalidraw \u754C\u9762\u4E5F\u542F\u7528\u8FD9\u4E9B\u5FEB\u6377\u952E\uFF1AAlt+\u65B9\u5411\u952E\u50CF\u6EDA\u8F6E\u4E00\u6837\u4E0A\u4E0B\u6EDA\u52A8\u5F53\u524D\u754C\u9762\uFF08PDF\u3001\u7B14\u8BB0\u90FD\u80FD\u7528\uFF09\uFF0CCtrl+= / Ctrl+- \u5BF9\u652F\u6301\u7F29\u653E\u7684\u754C\u9762\u751F\u6548\uFF08\u5982 PDF\uFF09\uFF0CCtrl+0 \u590D\u4F4D\u3002Excalidraw \u753B\u5E03\u5185\u59CB\u7EC8\u751F\u6548\uFF0C\u4E0D\u53D7\u6B64\u5F00\u5173\u5F71\u54CD\u3002\u6CE8\u610F\uFF1A\u5F00\u542F\u540E Alt+\u5DE6\u53F3\u952E\u53EF\u80FD\u4E0D\u518D\u7528\u4E8E\u524D\u8FDB/\u540E\u9000\u3002",
+        "Also enable these keys outside Excalidraw views: Alt+arrows scroll the current view like a wheel (works in PDFs and notes), Ctrl+= / Ctrl+- zoom views that support it (e.g. PDF), Ctrl+0 resets. Inside an Excalidraw view they always work, regardless of this toggle. Note: Alt+Left/Right may no longer navigate back/forward."
       )
     ).addToggle(
       (t) => t.setValue(s.blockKeysGlobally !== false).onChange(async (v) => {
@@ -2013,7 +2013,8 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         "\u5C0F\u5730\u56FE\u624B\u52BF\uFF1A\u70B9\u51FB = \u628A\u4E3B\u753B\u5E03\u79FB\u8FC7\u53BB\uFF1B\u62D6\u4EAE\u8272\u533A = \u79FB\u52A8\u89C6\u53E3\uFF1B\u62D6\u6697\u8272\u533A = \u62D6\u5730\u56FE\u5E76\u8BBE\u5B9A\u6807\u51C6\u4F4D\u7F6E\uFF1B\u6EDA\u8F6E = \u7F29\u653E\u5730\u56FE\uFF1BShift+\u62D6 = \u9501\u8F74\uFF1B\u53CC\u51FB = \u6574\u5F20\u56FE\u3002",
         "\u9762\u677F\u624B\u52BF\uFF1A\u62D6\u4E09\u9897\u70B9 = \u79FB\u52A8\uFF1B\u62D6\u53F3\u4E0B\u89D2 = \u6539\u5927\u5C0F\uFF1B\u25CE = \u56DE\u6B63\uFF1B\u5E95\u90E8\u6A2A\u6761 = \u7F29\u653E\u5730\u56FE\uFF08\u8D8A\u9760\u8FB9\u8D8A\u7CBE\u7EC6\uFF09\u3002",
         "\u4E3B\u753B\u5E03\u7F29\u653E\uFF1ACtrl+\u6EDA\u8F6E / \u89E6\u6478\u677F\u53CC\u6307 / Ctrl+= \u653E\u5927 / Ctrl+- \u7F29\u5C0F / Ctrl+0 \u590D\u4F4D\u3002",
-        "\u4E3B\u753B\u5E03\u5E73\u79FB\uFF1AAlt+\u65B9\u5411\u952E / \u7A7A\u683C+\u62D6 / \u4E2D\u952E\u62D6 / \u624B\u578B\u5DE5\u5177\u3002"
+        "\u4E3B\u753B\u5E03\u5E73\u79FB\uFF1AAlt+\u65B9\u5411\u952E / \u7A7A\u683C+\u62D6 / \u4E2D\u952E\u62D6 / \u624B\u578B\u5DE5\u5177\u3002",
+        "\u5168\u5C40\uFF1AAlt+\u65B9\u5411\u952E\u5728 PDF / \u7B14\u8BB0\u7B49\u754C\u9762\u7B49\u540C\u6EDA\u8F6E\u4E0A\u4E0B\u6EDA\uFF1BCtrl+= / Ctrl+- \u5BF9\u652F\u6301\u7F29\u653E\u7684\u754C\u9762\u751F\u6548\uFF08\u5982 PDF\uFF09\u3002"
       ],
       [
         "Excali Canvas Optimizer  v" + this.plugin.manifest.version,
@@ -2027,7 +2028,8 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         "Minimap: click = jump the canvas there; drag the blue box = pan; drag the dim area = move the map and set a new standard position; wheel = zoom the map; Shift+drag = lock an axis; double-click = fit the drawing.",
         "Panel: drag the three dots = move; drag the bottom-right corner = resize; \u25CE = recenter; bottom bar = zoom the map (finer towards the edges).",
         "Canvas zoom: Ctrl+wheel / trackpad pinch / Ctrl+= / Ctrl+- / Ctrl+0.",
-        "Canvas pan: Alt+arrow keys / Space+drag / middle-drag / hand tool."
+        "Canvas pan: Alt+arrow keys / Space+drag / middle-drag / hand tool.",
+        "Global: Alt+arrows scroll PDFs and notes like a wheel; Ctrl+= / Ctrl+- zoom views that support it (e.g. PDF)."
       ]
     );
     for (const line of aboutLines) {
@@ -2449,79 +2451,128 @@ var SmoothZoom = class {
       return false;
     }
   }
-  /** Alt + 方向键：平移画布（活动标签不是画布时也会作用到可见画布） */
+  /** 活动视图里最近的可滚动元素（PDF、Markdown、列表等） */
+  scrollableOf(view) {
+    const root = view && view.containerEl;
+    if (!root) return null;
+    const cands = [
+      root.querySelector(".cm-scroller"),
+      root.querySelector(".pdf-viewer-container"),
+      root.querySelector(".markdown-preview-view"),
+      root.querySelector(".view-content"),
+      root
+    ].filter(Boolean);
+    for (const el of cands) {
+      if (el.scrollHeight > el.clientHeight + 4 || el.scrollWidth > el.clientWidth + 4) return el;
+    }
+    return cands[0] || null;
+  }
+  /** 用按键滚动活动视图（替代滚轮上下滚） */
+  scrollActiveView(dx, dy) {
+    try {
+      const leaf = this.app.workspace.activeLeaf;
+      const el = this.scrollableOf(leaf && leaf.view);
+      if (!el) return false;
+      el.scrollBy({ left: dx, top: dy, behavior: "instant" });
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+  /** 用合成的 Ctrl+滚轮缩放活动视图（PDF 等原生支持） */
+  zoomActiveView(dir) {
+    try {
+      const leaf = this.app.workspace.activeLeaf;
+      const root = leaf && leaf.view && leaf.view.containerEl;
+      if (!root) return false;
+      const box = root.getBoundingClientRect();
+      const x = box.left + box.width / 2;
+      const y = box.top + box.height / 2;
+      const target = document.elementFromPoint(x, y) || root;
+      target.dispatchEvent(
+        new WheelEvent("wheel", { deltaY: dir > 0 ? -120 : 120, ctrlKey: true, clientX: x, clientY: y, bubbles: true, cancelable: true })
+      );
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+  /** Alt + 方向键：画布内平移；其它界面像滚轮一样滚动（PDF、笔记等都能用） */
   onPanKey(ev) {
     if (!this.enabled) return;
     if (!ev.altKey || ev.ctrlKey || ev.metaKey) return;
     const dirs = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [1, 0], ArrowRight: [-1, 0] };
     const d = dirs[ev.key];
     if (!d) return;
-    const view = this.targetView();
-    const api = view && view.excalidrawAPI;
-    if (!api) {
-      if (this.blockOutside()) {
-        ev.preventDefault();
-        ev.stopPropagation();
+    const active = this.activeView();
+    if (active) {
+      const api = active.excalidrawAPI;
+      if (!api) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!this.session && !this.begin(active, api, "pan", null)) {
+        const z = api.getAppState().zoom && api.getAppState().zoom.value || 1;
+        this.directPan(api, d[0] * 60 / z, d[1] * 60 / z);
+        return;
       }
+      const s = this.session;
+      if (!s) return;
+      const step = 60 / (s.drawZoom || s.zoom);
+      s.scrollX += d[0] * step;
+      s.scrollY += d[1] * step;
+      this.applyTransform();
+      this.armWatchdog();
+      this.schedule();
       return;
     }
+    if (!this.blockOutside()) return;
     ev.preventDefault();
     ev.stopPropagation();
-    if (!this.session && !this.begin(view, api, "pan", null)) {
-      const z = api.getAppState().zoom && api.getAppState().zoom.value || 1;
-      this.directPan(api, d[0] * 60 / z, d[1] * 60 / z);
-      return;
-    }
-    const s = this.session;
-    if (!s) return;
-    const step = 60 / (s.drawZoom || s.zoom);
-    s.scrollX += d[0] * step;
-    s.scrollY += d[1] * step;
-    this.applyTransform();
-    this.armWatchdog();
-    this.schedule();
+    this.scrollActiveView(-d[0] * 120, -d[1] * 120);
   }
-  /** Ctrl/⌘ + = / - / 0：缩放画布（活动标签不是画布时也会作用到可见画布） */
+  /** Ctrl/⌘ + = / - / 0：画布内缩放画布；其它界面用 Ctrl+滚轮缩放（PDF 支持） */
   onZoomKey(ev) {
     if (!this.enabled) return;
     if (!(ev.ctrlKey || ev.metaKey)) return;
     const k = ev.key;
     if (k !== "=" && k !== "+" && k !== "-" && k !== "0") return;
-    const view = this.targetView();
-    const api = view && view.excalidrawAPI;
-    if (!api) {
-      if (this.blockOutside()) {
-        ev.preventDefault();
-        ev.stopPropagation();
+    const active = this.activeView();
+    if (active) {
+      const api = active.excalidrawAPI;
+      if (!api) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!this.session && !this.begin(active, api, "zoom", null)) {
+        this.directZoom(api, k);
+        return;
       }
+      const s = this.session;
+      if (!s) return;
+      const st = api.getAppState();
+      const offL = Number(st.offsetLeft) || 0;
+      const offT = Number(st.offsetTop) || 0;
+      const ax = s.rect.width / 2;
+      const ay = s.rect.height / 2;
+      const wx = (ax - offL) / s.zoom - s.scrollX;
+      const wy = (ay - offT) / s.zoom - s.scrollY;
+      let next = s.zoom;
+      if (k === "0") next = 1;
+      else if (k === "-") next = s.zoom / 1.15;
+      else next = s.zoom * 1.15;
+      next = Math.min(30, Math.max(0.1, next));
+      s.zoom = next;
+      s.scrollX = (ax - offL) / next - wx;
+      s.scrollY = (ay - offT) / next - wy;
+      this.applyTransform();
+      this.armWatchdog();
+      this.schedule();
       return;
     }
+    if (!this.blockOutside()) return;
     ev.preventDefault();
     ev.stopPropagation();
-    if (!this.session && !this.begin(view, api, "zoom", null)) {
-      this.directZoom(api, k);
-      return;
-    }
-    const s = this.session;
-    if (!s) return;
-    const st = api.getAppState();
-    const offL = Number(st.offsetLeft) || 0;
-    const offT = Number(st.offsetTop) || 0;
-    const ax = s.rect.width / 2;
-    const ay = s.rect.height / 2;
-    const wx = (ax - offL) / s.zoom - s.scrollX;
-    const wy = (ay - offT) / s.zoom - s.scrollY;
-    let next = s.zoom;
-    if (k === "0") next = 1;
-    else if (k === "-") next = s.zoom / 1.15;
-    else next = s.zoom * 1.15;
-    next = Math.min(30, Math.max(0.1, next));
-    s.zoom = next;
-    s.scrollX = (ax - offL) / next - wx;
-    s.scrollY = (ay - offT) / next - wy;
-    this.applyTransform();
-    this.armWatchdog();
-    this.schedule();
+    if (k === "0") return;
+    this.zoomActiveView(k === "-" ? -1 : 1);
   }
   /** 空格按下就冻结：用户必然是先按空格再拖 */
   /** 底图签名：元素数量 + 版本号和，内容变了才需要重建 */

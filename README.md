@@ -52,6 +52,7 @@
 | --- | --- |
 | Zoom / 缩放 | `Ctrl + wheel`, trackpad pinch, `Ctrl + =`, `Ctrl + -`, `Ctrl + 0` |
 | Pan / 平移 | `Alt + arrow keys`, `Space + drag`, middle-button drag, hand tool |
+| Scroll other views / 其他界面滚动 | `Alt + ↑/↓` scrolls PDFs and notes like a wheel |
 
 > `Ctrl±` is intercepted only inside an Excalidraw view — it will not zoom the whole Obsidian UI.
 > `Ctrl±` 只在 Excalidraw 视图内被拦截，不会缩放整个 Obsidian 界面。
@@ -80,7 +81,7 @@ Panel: drag the three dots to move · drag the bottom-right corner to resize · 
 - Smooth zoom (freeze rendering)
 - Suppress Excalidraw "Show hint"
 - Settle delay (default 120 ms)
-- Advanced: minimap refresh interval, global zoom & pan shortcuts (also work while a note or another view is focused), reset all settings, check for updates
+- Advanced: minimap refresh interval, global shortcuts (Ctrl± zooms the canvas or a zoomable view such as PDF; Alt+arrows scroll other views like a wheel), reset all settings, check for updates
 
 **中文**
 - 显示导航小地图
@@ -88,7 +89,7 @@ Panel: drag the three dots to move · drag the bottom-right corner to resize · 
 - 顺滑缩放（冻结渲染）
 - 关闭画布提示（Show hint）
 - 停手判定（默认 120ms）
-- 高级：小地图刷新间隔、全局缩放/平移快捷键（在笔记等界面也直接操作可见画布）、重置所有设置、检测更新
+- 高级：小地图刷新间隔、全局快捷键（Ctrl± 缩放画布或支持缩放的界面如 PDF；Alt+方向键在其它界面等同滚轮滚动）、重置所有设置、检测更新
 
 ---
 
