@@ -2044,6 +2044,7 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
 // src/smooth.js
 var MIN_ZOOM2 = 0.1;
 var NONCANVAS_ZOOM_DELTA = 30;
+var NONCANVAS_SCROLL_STEP = 60;
 var MAX_ZOOM2 = 30;
 var SETTLE_MS = 260;
 var WATCHDOG_MS = 3e3;
@@ -2529,7 +2530,7 @@ var SmoothZoom = class {
     if (!this.blockOutside()) return;
     ev.preventDefault();
     ev.stopPropagation();
-    this.scrollActiveView(-d[0] * 120, -d[1] * 120);
+    this.scrollActiveView(-d[0] * NONCANVAS_SCROLL_STEP, -d[1] * NONCANVAS_SCROLL_STEP);
   }
   /** Ctrl/⌘ + = / - / 0：画布内缩放画布；其它界面用 Ctrl+滚轮缩放（PDF 支持） */
   onZoomKey(ev) {

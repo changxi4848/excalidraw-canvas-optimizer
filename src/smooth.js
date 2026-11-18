@@ -2,6 +2,8 @@
 const MIN_ZOOM = 0.1;
 /** 非画布界面（PDF 等）每次按键的滚轮增量：PDF 缩放是档位式的，30 恰好一格 */
 const NONCANVAS_ZOOM_DELTA = 30;
+/** 非画布界面（PDF / 笔记）每次按键滚动的像素数 */
+const NONCANVAS_SCROLL_STEP = 60;
 const MAX_ZOOM = 30;
 /** 停手后多久提交（毫秒） */
 const SETTLE_MS = 260;
@@ -528,7 +530,7 @@ export class SmoothZoom {
     if (!this.blockOutside()) return;
     ev.preventDefault();
     ev.stopPropagation();
-    this.scrollActiveView(-d[0] * 120, -d[1] * 120);
+    this.scrollActiveView(-d[0] * NONCANVAS_SCROLL_STEP, -d[1] * NONCANVAS_SCROLL_STEP);
   }
 
   /** Ctrl/⌘ + = / - / 0：画布内缩放画布；其它界面用 Ctrl+滚轮缩放（PDF 支持） */
