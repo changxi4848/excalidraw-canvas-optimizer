@@ -30,6 +30,8 @@ export const DEFAULT_SETTINGS = {
   smoothEnabled: true,
   smoothSettleMs: 120,
   suppressHints: true,
+  /* 非画布界面是否也拦截缩放/平移快捷键 */
+  blockKeysGlobally: true,
 
   /* 界面语言：zh / en */
   uiLang: "zh",
@@ -184,6 +186,21 @@ export class MinimapSettingTab extends PluginSettingTab {
             s.tickMs = v;
             await this.plugin.saveSettingsAndSync();
           })
+      );
+
+    new Setting(containerEl)
+      .setName(L("全局拦截缩放/平移快捷键", "Block zoom & pan shortcuts globally"))
+      .setDesc(
+        L(
+          "在非 Excalidraw 界面（普通笔记、设置页等）也拦截 Ctrl+= / Ctrl+- / Ctrl+0 与 Alt+方向键，避免误按导致整个 Obsidian 界面被缩放。Excalidraw 画布内始终生效，不受此开关影响。注意：开启后 Alt+左右键可能不再用于前进/后退。",
+          "Also intercept Ctrl+= / Ctrl+- / Ctrl+0 and Alt+arrows outside Excalidraw views, so a mistyped shortcut does not zoom the whole Obsidian UI. Inside an Excalidraw view these keys always work, regardless of this toggle. Note: Alt+Left/Right may no longer navigate back/forward."
+        )
+      )
+      .addToggle((t) =>
+        t.setValue(s.blockKeysGlobally !== false).onChange(async (v) => {
+          s.blockKeysGlobally = v;
+          await this.plugin.saveSettingsAndSync();
+        })
       );
 
     new Setting(containerEl)

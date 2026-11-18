@@ -80,7 +80,7 @@ Panel: drag the three dots to move · drag the bottom-right corner to resize · 
 - Smooth zoom (freeze rendering)
 - Suppress Excalidraw "Show hint"
 - Settle delay (default 120 ms)
-- Advanced: minimap refresh interval, reset all settings, check for updates
+- Advanced: minimap refresh interval, block zoom & pan shortcuts globally, reset all settings, check for updates
 
 **中文**
 - 显示导航小地图
@@ -88,7 +88,7 @@ Panel: drag the three dots to move · drag the bottom-right corner to resize · 
 - 顺滑缩放（冻结渲染）
 - 关闭画布提示（Show hint）
 - 停手判定（默认 120ms）
-- 高级：小地图刷新间隔、重置所有设置、检测更新
+- 高级：小地图刷新间隔、全局拦截缩放/平移快捷键、重置所有设置、检测更新
 
 ---
 

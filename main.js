@@ -1829,6 +1829,8 @@ var DEFAULT_SETTINGS = {
   smoothEnabled: true,
   smoothSettleMs: 120,
   suppressHints: true,
+  /* 非画布界面是否也拦截缩放/平移快捷键 */
+  blockKeysGlobally: true,
   /* 界面语言：zh / en */
   uiLang: "zh"
 };
@@ -1934,6 +1936,17 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
     ).addSlider(
       (sl) => sl.setLimits(60, 600, 10).setValue(Number(s.tickMs) || 250).setDynamicTooltip().onChange(async (v) => {
         s.tickMs = v;
+        await this.plugin.saveSettingsAndSync();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName(L("\u5168\u5C40\u62E6\u622A\u7F29\u653E/\u5E73\u79FB\u5FEB\u6377\u952E", "Block zoom & pan shortcuts globally")).setDesc(
+      L(
+        "\u5728\u975E Excalidraw \u754C\u9762\uFF08\u666E\u901A\u7B14\u8BB0\u3001\u8BBE\u7F6E\u9875\u7B49\uFF09\u4E5F\u62E6\u622A Ctrl+= / Ctrl+- / Ctrl+0 \u4E0E Alt+\u65B9\u5411\u952E\uFF0C\u907F\u514D\u8BEF\u6309\u5BFC\u81F4\u6574\u4E2A Obsidian \u754C\u9762\u88AB\u7F29\u653E\u3002Excalidraw \u753B\u5E03\u5185\u59CB\u7EC8\u751F\u6548\uFF0C\u4E0D\u53D7\u6B64\u5F00\u5173\u5F71\u54CD\u3002\u6CE8\u610F\uFF1A\u5F00\u542F\u540E Alt+\u5DE6\u53F3\u952E\u53EF\u80FD\u4E0D\u518D\u7528\u4E8E\u524D\u8FDB/\u540E\u9000\u3002",
+        "Also intercept Ctrl+= / Ctrl+- / Ctrl+0 and Alt+arrows outside Excalidraw views, so a mistyped shortcut does not zoom the whole Obsidian UI. Inside an Excalidraw view these keys always work, regardless of this toggle. Note: Alt+Left/Right may no longer navigate back/forward."
+      )
+    ).addToggle(
+      (t) => t.setValue(s.blockKeysGlobally !== false).onChange(async (v) => {
+        s.blockKeysGlobally = v;
         await this.plugin.saveSettingsAndSync();
       })
     );
@@ -2376,7 +2389,17 @@ var SmoothZoom = class {
     this.armWatchdog();
     this.schedule();
   }
-  /** Ctrl/⌘ +/-/0：Excalidraw 的缩放快捷键，也走冻结，避免全量重绘卡一下 */
+  /** 当前活动视图：只看活动叶子，不回退到后台画布（供快捷键判定用） */
+  activeView() {
+    const ws = this.app.workspace;
+    const leaf = ws.activeLeaf;
+    const v = leaf && leaf.view;
+    return v && v.getViewType && v.getViewType() === "excalidraw" ? v : null;
+  }
+  /** 非 Excalidraw 界面时是否也拦截快捷键 */
+  blockOutside() {
+    return this.settings.blockKeysGlobally !== false;
+  }
   /** Alt + 方向键平移画布（替代滚轮上下滚） */
   onPanKey(ev) {
     if (!this.enabled) return;
@@ -2384,8 +2407,14 @@ var SmoothZoom = class {
     const dirs = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [1, 0], ArrowRight: [-1, 0] };
     const d = dirs[ev.key];
     if (!d) return;
-    const view = this.view();
-    if (!view) return;
+    const view = this.activeView();
+    if (!view) {
+      if (this.blockOutside()) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      return;
+    }
     const api = view.excalidrawAPI;
     if (!api) return;
     ev.preventDefault();
@@ -2400,15 +2429,25 @@ var SmoothZoom = class {
     this.armWatchdog();
     this.schedule();
   }
+  /** Ctrl/⌘ + = / - / 0：缩放画布（冻结渲染，不重绘整页） */
   onZoomKey(ev) {
     if (!this.enabled) return;
     if (!(ev.ctrlKey || ev.metaKey)) return;
     const k = ev.key;
     if (k !== "=" && k !== "+" && k !== "-" && k !== "0") return;
-    const view = this.view();
-    if (!view) return;
+    const view = this.activeView();
+    if (!view) {
+      if (this.blockOutside()) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      return;
+    }
     const api = view.excalidrawAPI;
-    if (!api) return;
+    if (!api) {
+      if (this.blockOutside()) ev.preventDefault();
+      return;
+    }
     if (!this.session && !this.begin(view, api, "zoom", null)) return;
     const s = this.session;
     if (!s) return;

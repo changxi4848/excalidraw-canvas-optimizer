@@ -381,7 +381,19 @@ export class SmoothZoom {
     this.schedule();
   }
 
-  /** Ctrl/⌘ +/-/0：Excalidraw 的缩放快捷键，也走冻结，避免全量重绘卡一下 */
+  /** 当前活动视图：只看活动叶子，不回退到后台画布（供快捷键判定用） */
+  activeView() {
+    const ws = this.app.workspace;
+    const leaf = ws.activeLeaf;
+    const v = leaf && leaf.view;
+    return v && v.getViewType && v.getViewType() === "excalidraw" ? v : null;
+  }
+
+  /** 非 Excalidraw 界面时是否也拦截快捷键 */
+  blockOutside() {
+    return this.settings.blockKeysGlobally !== false;
+  }
+
   /** Alt + 方向键平移画布（替代滚轮上下滚） */
   onPanKey(ev) {
     if (!this.enabled) return;
@@ -389,8 +401,15 @@ export class SmoothZoom {
     const dirs = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [1, 0], ArrowRight: [-1, 0] };
     const d = dirs[ev.key];
     if (!d) return;
-    const view = this.view();
-    if (!view) return;
+    const view = this.activeView();
+    if (!view) {
+      // 非 Excalidraw 界面：按开关决定是否吞掉这些键
+      if (this.blockOutside()) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      return;
+    }
     const api = view.excalidrawAPI;
     if (!api) return;
     ev.preventDefault();
@@ -406,16 +425,26 @@ export class SmoothZoom {
     this.schedule();
   }
 
+  /** Ctrl/⌘ + = / - / 0：缩放画布（冻结渲染，不重绘整页） */
   onZoomKey(ev) {
     if (!this.enabled) return;
     if (!(ev.ctrlKey || ev.metaKey)) return;
     const k = ev.key;
     if (k !== "=" && k !== "+" && k !== "-" && k !== "0") return;
-    const view = this.view();
-    // 只要当前是 Excalidraw 视图就拦截，否则 Electron 会把"Ctrl±"当成整个界面缩放
-    if (!view) return;
+    const view = this.activeView();
+    if (!view) {
+      // 非 Excalidraw 界面：拦截，避免 Electron 把 Ctrl± 当成缩放整个界面
+      if (this.blockOutside()) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      return;
+    }
     const api = view.excalidrawAPI;
-    if (!api) return;
+    if (!api) {
+      if (this.blockOutside()) ev.preventDefault();
+      return;
+    }
     if (!this.session && !this.begin(view, api, "zoom", null)) return;
     const s = this.session;
     if (!s) return;
