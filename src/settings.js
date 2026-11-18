@@ -189,11 +189,11 @@ export class MinimapSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName(L("全局拦截缩放/平移快捷键", "Block zoom & pan shortcuts globally"))
+      .setName(L("全局接管缩放/平移快捷键", "Global zoom & pan shortcuts"))
       .setDesc(
         L(
-          "在非 Excalidraw 界面（普通笔记、设置页等）也拦截 Ctrl+= / Ctrl+- / Ctrl+0 与 Alt+方向键，避免误按导致整个 Obsidian 界面被缩放。Excalidraw 画布内始终生效，不受此开关影响。注意：开启后 Alt+左右键可能不再用于前进/后退。",
-          "Also intercept Ctrl+= / Ctrl+- / Ctrl+0 and Alt+arrows outside Excalidraw views, so a mistyped shortcut does not zoom the whole Obsidian UI. Inside an Excalidraw view these keys always work, regardless of this toggle. Note: Alt+Left/Right may no longer navigate back/forward."
+          "在非 Excalidraw 界面（普通笔记、关系图等）也接管 Ctrl+= / Ctrl+- / Ctrl+0 与 Alt+方向键：有可见的 Excalidraw 画布时直接操作那块画布，没有时仅阻止整个 Obsidian 界面被缩放。Excalidraw 画布内始终生效，不受此开关影响。注意：开启后 Alt+左右键可能不再用于前进/后退。",
+          "Also handle Ctrl+= / Ctrl+- / Ctrl+0 and Alt+arrows outside Excalidraw views: if an Excalidraw canvas is visible it is zoomed/panned directly; otherwise the keys are simply blocked so the Obsidian UI is not zoomed. Inside an Excalidraw view these keys always work, regardless of this toggle. Note: Alt+Left/Right may no longer navigate back/forward."
         )
       )
       .addToggle((t) =>

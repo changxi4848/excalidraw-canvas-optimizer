@@ -1939,10 +1939,10 @@ var MinimapSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettingsAndSync();
       })
     );
-    new import_obsidian.Setting(containerEl).setName(L("\u5168\u5C40\u62E6\u622A\u7F29\u653E/\u5E73\u79FB\u5FEB\u6377\u952E", "Block zoom & pan shortcuts globally")).setDesc(
+    new import_obsidian.Setting(containerEl).setName(L("\u5168\u5C40\u63A5\u7BA1\u7F29\u653E/\u5E73\u79FB\u5FEB\u6377\u952E", "Global zoom & pan shortcuts")).setDesc(
       L(
-        "\u5728\u975E Excalidraw \u754C\u9762\uFF08\u666E\u901A\u7B14\u8BB0\u3001\u8BBE\u7F6E\u9875\u7B49\uFF09\u4E5F\u62E6\u622A Ctrl+= / Ctrl+- / Ctrl+0 \u4E0E Alt+\u65B9\u5411\u952E\uFF0C\u907F\u514D\u8BEF\u6309\u5BFC\u81F4\u6574\u4E2A Obsidian \u754C\u9762\u88AB\u7F29\u653E\u3002Excalidraw \u753B\u5E03\u5185\u59CB\u7EC8\u751F\u6548\uFF0C\u4E0D\u53D7\u6B64\u5F00\u5173\u5F71\u54CD\u3002\u6CE8\u610F\uFF1A\u5F00\u542F\u540E Alt+\u5DE6\u53F3\u952E\u53EF\u80FD\u4E0D\u518D\u7528\u4E8E\u524D\u8FDB/\u540E\u9000\u3002",
-        "Also intercept Ctrl+= / Ctrl+- / Ctrl+0 and Alt+arrows outside Excalidraw views, so a mistyped shortcut does not zoom the whole Obsidian UI. Inside an Excalidraw view these keys always work, regardless of this toggle. Note: Alt+Left/Right may no longer navigate back/forward."
+        "\u5728\u975E Excalidraw \u754C\u9762\uFF08\u666E\u901A\u7B14\u8BB0\u3001\u5173\u7CFB\u56FE\u7B49\uFF09\u4E5F\u63A5\u7BA1 Ctrl+= / Ctrl+- / Ctrl+0 \u4E0E Alt+\u65B9\u5411\u952E\uFF1A\u6709\u53EF\u89C1\u7684 Excalidraw \u753B\u5E03\u65F6\u76F4\u63A5\u64CD\u4F5C\u90A3\u5757\u753B\u5E03\uFF0C\u6CA1\u6709\u65F6\u4EC5\u963B\u6B62\u6574\u4E2A Obsidian \u754C\u9762\u88AB\u7F29\u653E\u3002Excalidraw \u753B\u5E03\u5185\u59CB\u7EC8\u751F\u6548\uFF0C\u4E0D\u53D7\u6B64\u5F00\u5173\u5F71\u54CD\u3002\u6CE8\u610F\uFF1A\u5F00\u542F\u540E Alt+\u5DE6\u53F3\u952E\u53EF\u80FD\u4E0D\u518D\u7528\u4E8E\u524D\u8FDB/\u540E\u9000\u3002",
+        "Also handle Ctrl+= / Ctrl+- / Ctrl+0 and Alt+arrows outside Excalidraw views: if an Excalidraw canvas is visible it is zoomed/panned directly; otherwise the keys are simply blocked so the Obsidian UI is not zoomed. Inside an Excalidraw view these keys always work, regardless of this toggle. Note: Alt+Left/Right may no longer navigate back/forward."
       )
     ).addToggle(
       (t) => t.setValue(s.blockKeysGlobally !== false).onChange(async (v) => {
@@ -2401,25 +2401,77 @@ var SmoothZoom = class {
     return this.settings.blockKeysGlobally !== false;
   }
   /** Alt + 方向键平移画布（替代滚轮上下滚） */
+  /** 快捷键目标画布：活动视图 → 可见的 Excalidraw → 任意 Excalidraw */
+  targetView() {
+    const active = this.activeView();
+    if (active) return active;
+    const visible = this.view();
+    if (visible) return visible;
+    try {
+      for (const leaf of this.app.workspace.getLeavesOfType("excalidraw") || []) {
+        const v = leaf.view;
+        if (v && v.excalidrawAPI) return v;
+      }
+    } catch (err) {
+    }
+    return null;
+  }
+  /** 画布不可见（拿不到有效尺寸）时，直接改 appState 缩放 */
+  directZoom(api, k) {
+    try {
+      const st = api.getAppState();
+      const cur = st.zoom && st.zoom.value || 1;
+      let next = cur;
+      if (k === "0") next = 1;
+      else if (k === "-") next = cur / 1.15;
+      else next = cur * 1.15;
+      next = Math.min(30, Math.max(0.1, next));
+      const w = Number(st.width) || 800;
+      const h = Number(st.height) || 600;
+      const wx = w / (2 * cur) - st.scrollX;
+      const wy = h / (2 * cur) - st.scrollY;
+      api.updateScene({
+        appState: { zoom: { value: next }, scrollX: w / (2 * next) - wx, scrollY: h / (2 * next) - wy },
+        captureUpdate: "NEVER"
+      });
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+  /** 画布不可见时，直接改 appState 平移 */
+  directPan(api, dx, dy) {
+    try {
+      const st = api.getAppState();
+      api.updateScene({ appState: { scrollX: st.scrollX + dx, scrollY: st.scrollY + dy }, captureUpdate: "NEVER" });
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+  /** Alt + 方向键：平移画布（活动标签不是画布时也会作用到可见画布） */
   onPanKey(ev) {
     if (!this.enabled) return;
     if (!ev.altKey || ev.ctrlKey || ev.metaKey) return;
     const dirs = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [1, 0], ArrowRight: [-1, 0] };
     const d = dirs[ev.key];
     if (!d) return;
-    const view = this.activeView();
-    if (!view) {
+    const view = this.targetView();
+    const api = view && view.excalidrawAPI;
+    if (!api) {
       if (this.blockOutside()) {
         ev.preventDefault();
         ev.stopPropagation();
       }
       return;
     }
-    const api = view.excalidrawAPI;
-    if (!api) return;
     ev.preventDefault();
     ev.stopPropagation();
-    if (!this.session && !this.begin(view, api, "pan", null)) return;
+    if (!this.session && !this.begin(view, api, "pan", null)) {
+      const z = api.getAppState().zoom && api.getAppState().zoom.value || 1;
+      this.directPan(api, d[0] * 60 / z, d[1] * 60 / z);
+      return;
+    }
     const s = this.session;
     if (!s) return;
     const step = 60 / (s.drawZoom || s.zoom);
@@ -2429,30 +2481,29 @@ var SmoothZoom = class {
     this.armWatchdog();
     this.schedule();
   }
-  /** Ctrl/⌘ + = / - / 0：缩放画布（冻结渲染，不重绘整页） */
+  /** Ctrl/⌘ + = / - / 0：缩放画布（活动标签不是画布时也会作用到可见画布） */
   onZoomKey(ev) {
     if (!this.enabled) return;
     if (!(ev.ctrlKey || ev.metaKey)) return;
     const k = ev.key;
     if (k !== "=" && k !== "+" && k !== "-" && k !== "0") return;
-    const view = this.activeView();
-    if (!view) {
+    const view = this.targetView();
+    const api = view && view.excalidrawAPI;
+    if (!api) {
       if (this.blockOutside()) {
         ev.preventDefault();
         ev.stopPropagation();
       }
       return;
     }
-    const api = view.excalidrawAPI;
-    if (!api) {
-      if (this.blockOutside()) ev.preventDefault();
-      return;
-    }
-    if (!this.session && !this.begin(view, api, "zoom", null)) return;
-    const s = this.session;
-    if (!s) return;
     ev.preventDefault();
     ev.stopPropagation();
+    if (!this.session && !this.begin(view, api, "zoom", null)) {
+      this.directZoom(api, k);
+      return;
+    }
+    const s = this.session;
+    if (!s) return;
     const st = api.getAppState();
     const offL = Number(st.offsetLeft) || 0;
     const offT = Number(st.offsetTop) || 0;

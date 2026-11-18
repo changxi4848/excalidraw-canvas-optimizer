@@ -395,26 +395,79 @@ export class SmoothZoom {
   }
 
   /** Alt + 方向键平移画布（替代滚轮上下滚） */
+  /** 快捷键目标画布：活动视图 → 可见的 Excalidraw → 任意 Excalidraw */
+  targetView() {
+    const active = this.activeView();
+    if (active) return active;
+    const visible = this.view();
+    if (visible) return visible;
+    try {
+      for (const leaf of this.app.workspace.getLeavesOfType("excalidraw") || []) {
+        const v = leaf.view;
+        if (v && v.excalidrawAPI) return v;
+      }
+    } catch (err) { /* ignore */ }
+    return null;
+  }
+
+  /** 画布不可见（拿不到有效尺寸）时，直接改 appState 缩放 */
+  directZoom(api, k) {
+    try {
+      const st = api.getAppState();
+      const cur = (st.zoom && st.zoom.value) || 1;
+      let next = cur;
+      if (k === "0") next = 1;
+      else if (k === "-") next = cur / 1.15;
+      else next = cur * 1.15;
+      next = Math.min(30, Math.max(0.1, next));
+      const w = Number(st.width) || 800;
+      const h = Number(st.height) || 600;
+      const wx = w / (2 * cur) - st.scrollX;
+      const wy = h / (2 * cur) - st.scrollY;
+      api.updateScene({
+        appState: { zoom: { value: next }, scrollX: w / (2 * next) - wx, scrollY: h / (2 * next) - wy },
+        captureUpdate: "NEVER",
+      });
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  /** 画布不可见时，直接改 appState 平移 */
+  directPan(api, dx, dy) {
+    try {
+      const st = api.getAppState();
+      api.updateScene({ appState: { scrollX: st.scrollX + dx, scrollY: st.scrollY + dy }, captureUpdate: "NEVER" });
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  /** Alt + 方向键：平移画布（活动标签不是画布时也会作用到可见画布） */
   onPanKey(ev) {
     if (!this.enabled) return;
     if (!ev.altKey || ev.ctrlKey || ev.metaKey) return;
     const dirs = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [1, 0], ArrowRight: [-1, 0] };
     const d = dirs[ev.key];
     if (!d) return;
-    const view = this.activeView();
-    if (!view) {
-      // 非 Excalidraw 界面：按开关决定是否吞掉这些键
+    const view = this.targetView();
+    const api = view && view.excalidrawAPI;
+    if (!api) {
       if (this.blockOutside()) {
         ev.preventDefault();
         ev.stopPropagation();
       }
       return;
     }
-    const api = view.excalidrawAPI;
-    if (!api) return;
     ev.preventDefault();
     ev.stopPropagation();
-    if (!this.session && !this.begin(view, api, "pan", null)) return;
+    if (!this.session && !this.begin(view, api, "pan", null)) {
+      const z = (api.getAppState().zoom && api.getAppState().zoom.value) || 1;
+      this.directPan(api, (d[0] * 60) / z, (d[1] * 60) / z);
+      return;
+    }
     const s = this.session;
     if (!s) return;
     const step = 60 / (s.drawZoom || s.zoom); // 每按一次约 60 屏幕像素，接近滚轮一格
@@ -425,31 +478,29 @@ export class SmoothZoom {
     this.schedule();
   }
 
-  /** Ctrl/⌘ + = / - / 0：缩放画布（冻结渲染，不重绘整页） */
+  /** Ctrl/⌘ + = / - / 0：缩放画布（活动标签不是画布时也会作用到可见画布） */
   onZoomKey(ev) {
     if (!this.enabled) return;
     if (!(ev.ctrlKey || ev.metaKey)) return;
     const k = ev.key;
     if (k !== "=" && k !== "+" && k !== "-" && k !== "0") return;
-    const view = this.activeView();
-    if (!view) {
-      // 非 Excalidraw 界面：拦截，避免 Electron 把 Ctrl± 当成缩放整个界面
+    const view = this.targetView();
+    const api = view && view.excalidrawAPI;
+    if (!api) {
       if (this.blockOutside()) {
         ev.preventDefault();
         ev.stopPropagation();
       }
       return;
     }
-    const api = view.excalidrawAPI;
-    if (!api) {
-      if (this.blockOutside()) ev.preventDefault();
-      return;
-    }
-    if (!this.session && !this.begin(view, api, "zoom", null)) return;
-    const s = this.session;
-    if (!s) return;
     ev.preventDefault();
     ev.stopPropagation();
+    if (!this.session && !this.begin(view, api, "zoom", null)) {
+      this.directZoom(api, k);
+      return;
+    }
+    const s = this.session;
+    if (!s) return;
     const st = api.getAppState();
     const offL = Number(st.offsetLeft) || 0;
     const offT = Number(st.offsetTop) || 0;

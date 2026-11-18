@@ -51,7 +51,7 @@ build.mjs       esbuild 打包
 | `Ctrl + =` / `-` / `0` | 缩放 / 复位，锚点按设置（居中或光标） |
 | `Alt + 方向键` | 平移 60 屏幕像素，走冻结路径 |
 
-`Ctrl±` 在 Excalidraw 视图内始终拦截并缩放画布；在其它界面（普通笔记等）由设置 `blockKeysGlobally` 决定是否拦截（默认开），避免 Electron 缩放整个界面。判断用的是 `activeView()`（只看活动叶子，不回退后台画布），否则会把隐藏画布缩放掉。`Alt+方向键` 同理。
+`Ctrl±` 在 Excalidraw 视图内始终拦截并缩放画布；在其它界面（普通笔记等）由设置 `blockKeysGlobally` 决定是否拦截（默认开），避免 Electron 缩放整个界面。判断用 `targetView()`：活动视图是画布 → 用它；否则回退到可见画布；再否则任意画布（此时走 `directZoom/directPan` 直接改 appState，因为拿不到有效尺寸无法冻结）。都没有才仅拦截。`Alt+方向键` 同理。注意**不要**用 `view()` 直接做这个判定——它会把隐藏画布也当成目标。
 
 ---
 
